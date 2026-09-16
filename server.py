@@ -147,6 +147,11 @@ app = FastAPI(
     redoc_url=None,
 )
 
+# Brand assets (logo, hero art) for the Exchange Pro landing page.
+from fastapi.staticfiles import StaticFiles
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 @app.get("/", include_in_schema=False)
 async def index():

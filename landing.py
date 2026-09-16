@@ -11,11 +11,15 @@ LANDING_HTML = """<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Skill Exchange — the skill library for AI agents</title>
 <meta name="description" content="Skill Exchange: a free, open, moderated registry of reusable skills for AI agents. Exchange Pro: paid x402 data feeds and signed skill bundles on Base.">
+<link rel="icon" type="image/png" href="/static/brand/logo.png">
+<meta name="theme-color" content="#081426">
 <style>
 :root{
   --ink:#0f172a; --muted:#475569; --faint:#64748b;
-  --line:#e2e8f0; --bg:#ffffff; --soft:#f8fafc; --dark:#0b1220;
+  --line:#e2e8f0; --bg:#ffffff; --soft:#f8fafc; --dark:#0b1220; --navy:#081426;
   --accent:#2563eb; --accent-soft:#eff6ff; --green:#15803d; --green-soft:#f0fdf4;
+  --aqua:#22d3ee; --aqua-deep:#0e7490; --aqua-soft:#ecfeff;
+  --gold:#d4a24a; --gold-deep:#b45309; --gold-soft:#fffbeb;
   --radius:14px;
 }
 *{box-sizing:border-box}
@@ -26,21 +30,23 @@ a:hover{text-decoration:underline}
 /* nav */
 .nav{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
 .nav .wrap{display:flex;align-items:center;gap:28px;height:62px}
-.brand{font-weight:800;font-size:17px;letter-spacing:-.02em;color:var(--ink);white-space:nowrap}
-.brand .pro{font-weight:600;color:var(--accent)}
+.brand{font-weight:800;font-size:17px;letter-spacing:-.02em;color:var(--ink);white-space:nowrap;display:flex;align-items:center;gap:10px}
+.brand img{width:32px;height:32px;border-radius:8px;display:block}
+.brand .pro{font-weight:700;color:var(--gold-deep);display:flex;align-items:center;gap:6px}
+.brand .pro img{width:22px;height:22px}
 .navlinks{margin-left:auto;display:flex;gap:22px;font-size:14px;font-weight:500}
 .navlinks a{color:var(--muted)}
 .navlinks a:hover{color:var(--ink)}
 @media(max-width:640px){.navlinks{gap:14px;font-size:13px}}
 /* hero */
-.hero{background:radial-gradient(1200px 500px at 50% -10%,#1e3a8a 0%,var(--dark) 60%);color:#e2e8f0;padding:88px 0 76px}
-.hero h1{font-size:clamp(34px,5.4vw,58px);line-height:1.08;letter-spacing:-.03em;margin:0 0 18px;color:#fff;max-width:16em}
-.hero h1 .free{color:#93c5fd}
+.hero{background:linear-gradient(180deg,rgba(8,20,38,.60) 0%,rgba(8,20,38,.90) 100%),url('/static/brand/hero.jpg') center 32%/cover no-repeat,var(--navy);color:#e2e8f0;padding:96px 0 84px}
+.hero h1{font-size:clamp(34px,5.4vw,58px);line-height:1.08;letter-spacing:-.03em;margin:0 0 18px;color:#fff;max-width:16em;text-shadow:0 2px 24px rgba(8,20,38,.55)}
+.hero h1 .free{color:var(--aqua)}
 .hero p.lede{font-size:clamp(16px,2.2vw,20px);color:#cbd5e1;max-width:38em;margin:0 0 32px}
 .cta-row{display:flex;gap:14px;flex-wrap:wrap}
 .btn{display:inline-block;padding:13px 26px;border-radius:10px;font-weight:700;font-size:15px;border:1px solid transparent;cursor:pointer}
-.btn-primary{background:var(--accent);color:#fff}
-.btn-primary:hover{background:#1d4ed8;text-decoration:none}
+.btn-primary{background:linear-gradient(135deg,#2563eb 0%,#0891b2 100%);color:#fff}
+.btn-primary:hover{filter:brightness(1.12);text-decoration:none}
 .btn-ghost{border-color:#334155;color:#e2e8f0;background:transparent}
 .btn-ghost:hover{border-color:#64748b;text-decoration:none}
 .hero-meta{margin-top:34px;display:flex;gap:26px;flex-wrap:wrap;font-size:13.5px;color:#94a3b8}
@@ -50,6 +56,16 @@ a:hover{text-decoration:underline}
 .strip .wrap{display:flex;gap:30px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
 .strip .item{display:flex;align-items:center;gap:9px}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex:none}
+/* brand family */
+.fam{background:var(--navy);padding:34px 0}
+.fam .wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:22px}
+.fam-item{display:flex;gap:16px;align-items:center;background:rgba(255,255,255,.04);border:1px solid rgba(148,163,184,.22);border-radius:var(--radius);padding:18px 20px}
+.fam-item img{width:56px;height:56px;border-radius:12px;flex:none}
+.fam-item b{display:block;color:#fff;font-size:16px;letter-spacing:-.01em}
+.fam-item span{color:#94a3b8;font-size:13.5px}
+.fam-item .tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;border-radius:999px;padding:2px 9px;margin-left:8px;vertical-align:2px}
+.fam-item .tag.free{background:var(--aqua-soft);color:var(--aqua-deep)}
+.fam-item .tag.pro{background:var(--gold-soft);color:var(--gold-deep)}
 /* sections */
 section{padding:72px 0}
 section.alt{background:var(--soft);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
@@ -69,7 +85,9 @@ h2{font-size:clamp(26px,3.6vw,36px);letter-spacing:-.025em;margin:0 0 12px}
 /* pricing */
 .tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin-bottom:8px}
 .tier{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:26px}
-.tier.featured{border:2px solid var(--accent);box-shadow:0 10px 32px rgba(37,99,235,.10)}
+.tier.featured{border:2px solid var(--gold);box-shadow:0 10px 32px rgba(212,162,74,.16)}
+#pro .kicker{color:var(--gold-deep)}
+#skills .kicker{color:var(--aqua-deep)}
 .tier h3{margin:0 0 4px;font-size:18px}
 .tier .price{font-size:30px;font-weight:800;letter-spacing:-.02em;margin:6px 0 2px}
 .tier .per{font-size:13px;color:var(--faint);margin-bottom:14px}
@@ -108,7 +126,7 @@ footer .wrap{display:grid;gap:26px}
 <body>
 
 <nav class="nav"><div class="wrap">
-  <a class="brand" href="/">Skill Exchange <span class="pro">· Pro</span></a>
+  <a class="brand" href="/"><img src="/static/brand/logo.png" alt="Skill Exchange logo">Skill Exchange <span class="pro"><img src="/static/brand/logo-pro.png" alt="Exchange Pro logo">Pro</span></a>
   <div class="navlinks">
     <a href="#skills">Skills</a>
     <a href="#pro">Exchange Pro</a>
@@ -135,6 +153,11 @@ footer .wrap{display:grid;gap:26px}
   <span class="item"><span class="dot"></span>Every skill Ed25519-signed by its publisher</span>
   <span class="item"><span class="dot"></span>Human-moderated catalog</span>
   <span class="item"><span class="dot"></span>Free library stays free, forever</span>
+</div></div>
+
+<div class="fam"><div class="wrap">
+  <div class="fam-item"><img src="/static/brand/logo.png" alt="Skill Exchange logo"><div><b>Skill Exchange<span class="tag free">Free</span></b><span>The open library — publish, discover, install. Free forever.</span></div></div>
+  <div class="fam-item"><img src="/static/brand/logo-pro.png" alt="Exchange Pro logo"><div><b>Exchange Pro<span class="tag pro">Paid</span></b><span>The paid lane — curated bundles, intel feeds, reports. USDC on Base.</span></div></div>
 </div></div>
 
 <section id="skills"><div class="wrap">
