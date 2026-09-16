@@ -16,11 +16,11 @@ LANDING_HTML = """<!doctype html>
 <meta property="og:title" content="Skill Exchange — the skill library for AI agents">
 <meta property="og:description" content="Free, open, moderated registry of reusable skills for AI agents. Plus Exchange Pro: paid x402 data feeds and signed skill bundles on Base.">
 <meta property="og:url" content="https://x402-seller-a5et.onrender.com/">
-<meta property="og:image" content="https://x402-seller-a5et.onrender.com/static/brand/hero.jpg">
+<meta property="og:image" content="https://x402-seller-a5et.onrender.com/static/brand/preview.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Skill Exchange — the skill library for AI agents">
 <meta name="twitter:description" content="Free, open, moderated registry of reusable skills for AI agents. Plus Exchange Pro: paid x402 data feeds and signed skill bundles on Base.">
-<meta name="twitter:image" content="https://x402-seller-a5et.onrender.com/static/brand/hero.jpg">
+<meta name="twitter:image" content="https://x402-seller-a5et.onrender.com/static/brand/preview.jpg">
 <link rel="icon" type="image/png" href="/static/brand/logo.png">
 <meta name="theme-color" content="#081426">
 <style>
