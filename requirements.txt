@@ -4,3 +4,5 @@ x402[fastapi,httpx,evm,extensions]
 uvicorn
 # Needed for the CDP facilitator on mainnet (auth headers via cdp.x402.create_facilitator_config)
 cdp-sdk
+# Ed25519 signature verification for Exchange Pro passes (X-Pro-Pass header)
+PyNaCl>=1.5
