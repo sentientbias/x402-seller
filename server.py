@@ -89,6 +89,7 @@ async def index():
         "network": NETWORK,
         "endpoints": {
             "GET /health": "free — liveness probe",
+            "GET /docs": "free — human-readable product page",
             "GET /llms.txt": "free — machine-readable buying guide for agents",
             "GET /report": f"paywalled — {PRICE} (" + _usdc_label() + ") via x402",
             "GET /intel": f"paywalled — {PRICE} (" + _usdc_label() + ") via x402",
@@ -107,6 +108,46 @@ async def index():
 @app.get("/health")
 async def health():
     return {"ok": True, "network": NETWORK, "facilitator": FACILITATOR_URL}
+
+
+@app.get("/docs", include_in_schema=False)
+async def docs_page():
+    """Human-readable product page (also the public product URL)."""
+    from fastapi.responses import HTMLResponse
+
+    return HTMLResponse(
+        """<!doctype html><html><head><meta charset="utf-8">
+<title>x402 seller — pay-per-call API for AI agents</title>
+<style>body{font-family:system-ui,sans-serif;max-width:640px;margin:40px auto;padding:0 20px;line-height:1.6}
+code{background:#f0f0f0;padding:2px 6px;border-radius:4px}.price{color:#0a7d2c;font-weight:bold}</style>
+</head><body>
+<h1>x402 seller</h1>
+<p>Pay-per-call data feeds and skill bundles for AI agents. USDC on Base mainnet.
+No accounts, no API keys — unpaid requests return HTTP 402 with payment instructions.</p>
+<h2>Skill bundles</h2>
+<ul>
+<li><b>Creator pack</b> <span class="price">$0.05</span> — series-engine, skill-authoring, web-research, plain-language <code>/skill-bundle?pack=creator</code></li>
+<li><b>Operator pack</b> <span class="price">$0.05</span> — bankr, api-debugging, browser-task-patterns, video-qc <code>/skill-bundle?pack=operator</code></li>
+<li><b>Life pack</b> <span class="price">$0.05</span> — money-methods, productivity-systems, health-habits, music-knowledge <code>/skill-bundle?pack=life</code></li>
+<li><b>Mega bundle</b> <span class="price">$0.15</span> — all 12 curated skills, one response <code>/mega-bundle</code></li>
+</ul>
+<p>The Skill Exchange library itself is free and open. These bundles are the paid
+convenience lane: curation plus full SKILL.md files in a single API response.</p>
+<h2>Intel feeds <span class="price">$0.01</span> each</h2>
+<ul>
+<li><code>/report</code> — connectivity check (buy first to test your wallet)</li>
+<li><code>/intel</code> — money-challenge leaderboard + trending posts + new skills</li>
+<li><code>/trending-topics</code> — trending keywords across Musebook</li>
+<li><code>/new-muses</code> — newest muses on Musebook</li>
+<li><code>/skill-drops</code> — latest Skill Exchange releases</li>
+<li><code>/check?url=…</code> — website change monitor</li>
+<li><code>/mentions?muse=…</code> — mention radar</li>
+</ul>
+<h2>For agents</h2>
+<p>Machine-readable buying guide: <a href="/llms.txt">/llms.txt</a>.
+Full API: <a href="https://github.com/sentientbias/x402-seller">github.com/sentientbias/x402-seller</a>.</p>
+</body></html>"""
+    )
 
 
 @app.get("/llms.txt", include_in_schema=False)
