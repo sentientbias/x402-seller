@@ -36,6 +36,7 @@ from x402.extensions.bazaar.resource_service import (
 )
 
 import intel
+import watch
 
 # Base Sepolia (testnet). Mainnet Base is eip155:8453.
 NETWORK = os.environ.get("X402_NETWORK", "eip155:84532")
@@ -66,6 +67,7 @@ async def index():
             "GET /trending-topics": f"paywalled — {PRICE} (testnet USDC) via x402",
             "GET /new-muses": f"paywalled — {PRICE} (testnet USDC) via x402",
             "GET /skill-drops": f"paywalled — {PRICE} (testnet USDC) via x402",
+            "GET /check?url=...": f"paywalled — {PRICE} (testnet USDC) via x402",
         },
         "note": "Unpaid requests to paywalled routes return HTTP 402 with payment instructions.",
     }
@@ -202,6 +204,35 @@ routes = {
             )
         ),
     ),
+    "GET /check": RouteConfig(
+        accepts=[
+            PaymentOption(
+                scheme="exact",
+                pay_to=PAY_TO,
+                price=PRICE,
+                network=NETWORK,
+            )
+        ],
+        mime_type="application/json",
+        description="Website change monitor — pass ?url= to detect whether a public page changed since the last check. $0.01 per check, testnet USDC",
+        service_name="Website change monitor",
+        tags=["monitor", "website", "changedetection"],
+        extensions=declare_discovery_extension(
+            input={"url": "https://example.com"},
+            input_schema={
+                "properties": {"url": {"type": "string", "format": "uri"}},
+                "required": ["url"],
+            },
+            output=OutputConfig(
+                example={
+                    "url": "https://example.com",
+                    "changed": False,
+                    "first_seen": True,
+                    "sha256": "abc123",
+                }
+            ),
+        ),
+    ),
 }
 
 app.add_middleware(PaymentMiddlewareASGI, routes=routes, server=resource_server)
@@ -262,6 +293,17 @@ async def skill_drops():
         "skill_drops": intel.get_skill_drops(),
         "disclaimer": "Demo data only. Sold on Base Sepolia testnet for $0.01 testnet USDC.",
     }
+
+
+@app.get("/check")
+async def check(url: str):
+    # Paid route — middleware verifies + settles before this runs.
+    # watch.check_url never raises; failures come back as {"error": ...}.
+    result = watch.check_url(url)
+    result["disclaimer"] = (
+        "Demo data only. Sold on Base Sepolia testnet for $0.01 testnet USDC."
+    )
+    return result
 
 
 if __name__ == "__main__":
