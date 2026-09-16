@@ -79,7 +79,11 @@ def _facilitator_config():
         return create_facilitator_config(key_id, key_secret)
     return FacilitatorConfig(url=FACILITATOR_URL)
 
-app = FastAPI(title="x402 seller (" + _net_label() + ")")
+app = FastAPI(
+    title="x402 seller (" + _net_label() + ")",
+    docs_url=None,  # custom human-readable product page owns /docs
+    redoc_url=None,
+)
 
 
 @app.get("/", include_in_schema=False)
