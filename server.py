@@ -79,6 +79,8 @@ async def index():
             "GET /new-muses": f"paywalled — {PRICE} (testnet USDC) via x402",
             "GET /skill-drops": f"paywalled — {PRICE} (testnet USDC) via x402",
             "GET /check?url=...": f"paywalled — {PRICE} (testnet USDC) via x402",
+            "GET /mentions?muse=...": f"paywalled — {PRICE} (testnet USDC) via x402",
+            "GET /skill-bundle?pack=...": "paywalled — $0.05 (testnet USDC) via x402",
         },
         "note": "Unpaid requests to paywalled routes return HTTP 402 with payment instructions.",
     }
@@ -244,6 +246,62 @@ routes = {
             ),
         ),
     ),
+    "GET /mentions": RouteConfig(
+        accepts=[
+            PaymentOption(
+                scheme="exact",
+                pay_to=PAY_TO,
+                price=PRICE,
+                network=NETWORK,
+            )
+        ],
+        mime_type="application/json",
+        description="Mention radar — pass ?muse=yourname to see recent Musebook lobby posts mentioning you. $0.01 per lookup",
+        service_name="Mention radar",
+        tags=["musebook", "mentions", "reputation"],
+        extensions=declare_discovery_extension(
+            input={"muse": "zuckbot"},
+            input_schema={
+                "properties": {"muse": {"type": "string"}},
+                "required": ["muse"],
+            },
+            output=OutputConfig(
+                example={
+                    "muse": "zuckbot",
+                    "mention_count": 2,
+                    "mentions": [{"id": 1, "author": "example", "text": "example"}],
+                }
+            ),
+        ),
+    ),
+    "GET /skill-bundle": RouteConfig(
+        accepts=[
+            PaymentOption(
+                scheme="exact",
+                pay_to=PAY_TO,
+                price="$0.05",
+                network=NETWORK,
+            )
+        ],
+        mime_type="application/json",
+        description="Premium skill bundles — pass ?pack=creator or ?pack=operator for curated full-SKILL.md packs from the Skill Exchange. $0.05 per bundle",
+        service_name="Premium skill bundles",
+        tags=["skills", "bundle", "musebook"],
+        extensions=declare_discovery_extension(
+            input={"pack": "creator"},
+            input_schema={
+                "properties": {"pack": {"type": "string", "enum": ["creator", "operator"]}},
+                "required": ["pack"],
+            },
+            output=OutputConfig(
+                example={
+                    "pack": "creator",
+                    "count": 4,
+                    "skills": [{"slug": "series-engine", "chars": 1234}],
+                }
+            ),
+        ),
+    ),
 }
 
 app.add_middleware(PaymentMiddlewareASGI, routes=routes, server=resource_server)
@@ -304,6 +362,40 @@ async def skill_drops():
         "skill_drops": intel.get_skill_drops(),
         "disclaimer": "Demo data only. Sold on Base Sepolia testnet for $0.01 testnet USDC.",
     }
+
+
+@app.get("/mentions")
+async def mentions(muse: str = ""):
+    # Paid route — middleware verifies + settles before this runs.
+    name = muse.strip()
+    if not name:
+        return {"error": "missing ?muse=name query parameter"}
+    from datetime import datetime, timezone
+
+    hits = intel.get_mentions(name)
+    return {
+        "muse": name,
+        "mention_count": len(hits),
+        "mentions": hits,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "disclaimer": "Demo data only. Sold on Base Sepolia testnet for $0.01 testnet USDC.",
+    }
+
+
+@app.get("/skill-bundle")
+async def skill_bundle(pack: str = ""):
+    # Paid route — middleware verifies + settles before this runs.
+    name = pack.strip().lower()
+    if name not in intel.BUNDLES:
+        return {"error": "unknown pack", "available_packs": intel.list_bundles()}
+    from datetime import datetime, timezone
+
+    bundle = intel.get_skill_bundle(name)
+    bundle["generated_at"] = datetime.now(timezone.utc).isoformat()
+    bundle["disclaimer"] = (
+        "Premium bundle. Sold on Base Sepolia testnet for $0.05 testnet USDC."
+    )
+    return bundle
 
 
 @app.get("/check")

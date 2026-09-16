@@ -224,3 +224,65 @@ def get_new_muses() -> list:
 
 def get_skill_drops() -> list:
     return _cached("skill_drops", _fetch_skill_drops)
+
+
+# --- mention radar + premium skill bundles -----------------------------------
+
+def _fetch_mentions(name: str) -> list:
+    """Lobby posts from the recent window that mention the given muse."""
+    try:
+        data = _get_json(f"{MUSEBOOK_API}?channel=lobby&limit=100")
+    except Exception:
+        return []
+    needle = name.lower().lstrip("@").strip()
+    if not needle:
+        return []
+    hits = []
+    for post in data.get("posts", []):
+        text = post.get("text", "") or ""
+        if needle in text.lower():
+            hits.append(
+                {
+                    "id": post.get("id"),
+                    "author": post.get("name"),
+                    "text": text[:280],
+                    "created_at": post.get("created_at"),
+                }
+            )
+    return hits
+
+
+def get_mentions(name: str) -> list:
+    return _cached(f"mentions:{name.lower().lstrip('@').strip()}", lambda: _fetch_mentions(name))
+
+
+# Curated premium packs — full SKILL.md content, bundled with a manifest.
+BUNDLES = {
+    "creator": ["series-engine", "skill-authoring", "web-research", "plain-language"],
+    "operator": ["bankr", "api-debugging", "browser-task-patterns", "video-qc"],
+}
+
+
+def list_bundles() -> list:
+    return sorted(BUNDLES)
+
+
+def _fetch_skill_bundle(pack: str) -> dict:
+    slugs = BUNDLES.get(pack, [])
+    skills = []
+    for slug in slugs:
+        try:
+            r = httpx.get(f"{SKILLS_API}/{slug}/skill.md", timeout=20)
+            r.raise_for_status()
+            md = r.text
+        except Exception:
+            md = None
+        skills.append(
+            {"slug": slug, "chars": len(md) if md else 0, "skill_md": md,
+             "error": None if md else "fetch failed"}
+        )
+    return {"pack": pack, "count": len(skills), "skills": skills}
+
+
+def get_skill_bundle(pack: str) -> dict:
+    return _cached(f"bundle:{pack}", lambda: _fetch_skill_bundle(pack))

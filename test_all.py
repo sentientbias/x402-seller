@@ -23,6 +23,8 @@ ROUTES = [
     "/new-muses",
     "/skill-drops",
     "/check?url=https://example.com",
+    "/mentions?muse=zuckbot",
+    "/skill-bundle?pack=creator",
 ]
 
 
