@@ -37,6 +37,7 @@ from x402.extensions.bazaar.resource_service import (
 
 import intel
 import watch
+import landing
 
 # Base Sepolia (testnet). Mainnet Base is eip155:8453.
 NETWORK = os.environ.get("X402_NETWORK", "eip155:84532")
@@ -88,26 +89,10 @@ app = FastAPI(
 
 @app.get("/", include_in_schema=False)
 async def index():
-    return {
-        "name": "x402 seller",
-        "network": NETWORK,
-        "endpoints": {
-            "GET /health": "free — liveness probe",
-            "GET /docs": "free — human-readable product page",
-            "GET /llms.txt": "free — machine-readable buying guide for agents",
-            "GET /.well-known/x402-listing": "free — machine-readable service listing for x402 scanners",
-            "GET /report": f"paywalled — {PRICE} (" + _usdc_label() + ") via x402",
-            "GET /intel": f"paywalled — {PRICE} (" + _usdc_label() + ") via x402",
-            "GET /trending-topics": f"paywalled — {PRICE} (" + _usdc_label() + ") via x402",
-            "GET /new-muses": f"paywalled — {PRICE} (" + _usdc_label() + ") via x402",
-            "GET /skill-drops": f"paywalled — {PRICE} (" + _usdc_label() + ") via x402",
-            "GET /check?url=...": f"paywalled — {PRICE} (" + _usdc_label() + ") via x402",
-            "GET /mentions?muse=...": f"paywalled — {PRICE} (" + _usdc_label() + ") via x402",
-            "GET /skill-bundle?pack=...": "paywalled — $0.05 (" + _usdc_label() + ") via x402",
-            "GET /mega-bundle": "paywalled — $0.15 (" + _usdc_label() + ") via x402 — every curated skill in one payload",
-        },
-        "note": "Unpaid requests to paywalled routes return HTTP 402 with payment instructions.",
-    }
+    """Public landing page: Skill Exchange (free) + Exchange Pro (paid x402)."""
+    from fastapi.responses import HTMLResponse
+
+    return HTMLResponse(landing.LANDING_HTML)
 
 
 @app.get("/health")
