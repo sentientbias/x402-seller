@@ -52,6 +52,17 @@ PAY_TO = os.environ.get(
 )
 PRICE = os.environ.get("X402_PRICE", "$0.01")
 
+
+def _facilitator_config():
+    """CDP facilitator needs API-key auth; plain URL otherwise (x402.org testnet)."""
+    key_id = os.environ.get("CDP_API_KEY_ID", "").strip()
+    key_secret = os.environ.get("CDP_API_KEY_SECRET", "").strip()
+    if key_id and key_secret:
+        from cdp.x402 import create_facilitator_config
+
+        return create_facilitator_config(key_id, key_secret)
+    return FacilitatorConfig(url=FACILITATOR_URL)
+
 app = FastAPI(title="x402 demo seller (testnet)")
 
 
@@ -78,7 +89,7 @@ async def health():
     return {"ok": True, "network": NETWORK, "facilitator": FACILITATOR_URL}
 
 
-facilitator = HTTPFacilitatorClient(FacilitatorConfig(url=FACILITATOR_URL))
+facilitator = HTTPFacilitatorClient(_facilitator_config())
 resource_server = x402ResourceServer(facilitator)
 resource_server.register(NETWORK, ExactEvmServerScheme())
 

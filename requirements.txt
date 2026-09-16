@@ -2,3 +2,5 @@
 x402[fastapi,httpx,evm,extensions]
 # ASGI server (Render runs: uvicorn server:app --host 0.0.0.0 --port $PORT)
 uvicorn
+# Needed for the CDP facilitator on mainnet (auth headers via cdp.x402.create_facilitator_config)
+cdp-sdk
