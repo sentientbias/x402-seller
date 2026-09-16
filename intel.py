@@ -126,3 +126,101 @@ def get_trending() -> list:
 
 def get_new_skills() -> list:
     return _cached("new_skills", _fetch_new_skills)
+
+
+# --- intel suite expansion: trending-topics / new-muses / skill-drops --------
+
+_STOPWORDS = frozenset(
+    "a an the and or but if of at by for with to in on is are was were be been "
+    "being it its this that these those i you he she we they me him her us them "
+    "my your his our their as so not no do does did just like just out up down "
+    "over under again once here there when where which who whom what how why all "
+    "any both each few more most other some such than too very can will just "
+    "about into through during before after above below from one two three get "
+    "got would could should shall make made know known think thought also even "
+    "ever never always every much many new now today really still back dont cant "
+    "wont im youre thats thing things something anything everything someone "
+    "anyone everyone nothing well much want wanted need needs say said says "
+    "going come came see seen look looking take took feel felt try tried use "
+    "used using way ways time times day days year years way im dont ive youre "
+    "theyre weve thats theres".split()
+)
+_WORD_RE = re.compile(r"[a-z][a-z0-9_'-]{2,}")
+
+
+def _fetch_trending_topics() -> list:
+    """Top keyword topics across recent lobby posts (word frequency)."""
+    try:
+        data = _get_json(f"{MUSEBOOK_API}?channel=lobby&limit=50")
+    except Exception:
+        return []
+    counts: dict[str, int] = {}
+    samples: dict[str, list] = {}
+    for post in data.get("posts", []):
+        text = (post.get("text", "") or "").lower()
+        text = re.sub(r"https?://\S+|@\w+|#\w+", " ", text)
+        words = {w.strip("'-") for w in _WORD_RE.findall(text)}
+        for w in words:
+            if w in _STOPWORDS:
+                continue
+            counts[w] = counts.get(w, 0) + 1
+            samples.setdefault(w, []).append(post.get("id"))
+    ranked = sorted(counts.items(), key=lambda kv: kv[1], reverse=True)[:15]
+    return [
+        {"topic": w, "mentions": c, "sample_post_ids": samples[w][:3]}
+        for w, c in ranked
+    ]
+
+
+def _fetch_new_muses() -> list:
+    """Muses whose first post in the recent window is newest — new voices."""
+    try:
+        data = _get_json(f"{MUSEBOOK_API}?limit=50")
+    except Exception:
+        return []
+    first_seen: dict[str, str] = {}
+    post_count: dict[str, int] = {}
+    for post in data.get("posts", []):
+        name = post.get("name") or "unknown"
+        ts = post.get("created_at", "")
+        post_count[name] = post_count.get(name, 0) + 1
+        if name not in first_seen or ts < first_seen[name]:
+            first_seen[name] = ts
+    ranked = sorted(first_seen.items(), key=lambda kv: kv[1], reverse=True)[:15]
+    return [
+        {"muse": name, "first_seen_at": ts, "recent_posts": post_count[name]}
+        for name, ts in ranked
+    ]
+
+
+def _fetch_skill_drops() -> list:
+    """Newest Skill Exchange skills with publisher/version detail."""
+    try:
+        data = _get_json(SKILLS_API)
+    except Exception:
+        return []
+    items = data.get("items", data if isinstance(data, list) else [])
+    items = sorted(items, key=lambda s: s.get("created_at", ""), reverse=True)[:10]
+    return [
+        {
+            "name": s.get("name"),
+            "slug": s.get("slug"),
+            "description": (s.get("description", "") or "")[:300],
+            "version": s.get("latest_version") or s.get("version"),
+            "publisher": s.get("publisher") or s.get("author"),
+            "created_at": s.get("created_at"),
+        }
+        for s in items
+    ]
+
+
+def get_trending_topics() -> list:
+    return _cached("trending_topics", _fetch_trending_topics)
+
+
+def get_new_muses() -> list:
+    return _cached("new_muses", _fetch_new_muses)
+
+
+def get_skill_drops() -> list:
+    return _cached("skill_drops", _fetch_skill_drops)

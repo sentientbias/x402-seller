@@ -29,6 +29,12 @@ from x402.http.types import RouteConfig
 from x402.mechanisms.evm.exact import ExactEvmServerScheme
 from x402.server import x402ResourceServer
 
+# Bazaar discovery metadata (lets Coinbase Bazaar and other indexers list us)
+from x402.extensions.bazaar.resource_service import (
+    OutputConfig,
+    declare_discovery_extension,
+)
+
 import intel
 
 # Base Sepolia (testnet). Mainnet Base is eip155:8453.
@@ -57,8 +63,11 @@ async def index():
             "GET /health": "free — liveness probe",
             "GET /report": f"paywalled — {PRICE} (testnet USDC) via x402",
             "GET /intel": f"paywalled — {PRICE} (testnet USDC) via x402",
+            "GET /trending-topics": f"paywalled — {PRICE} (testnet USDC) via x402",
+            "GET /new-muses": f"paywalled — {PRICE} (testnet USDC) via x402",
+            "GET /skill-drops": f"paywalled — {PRICE} (testnet USDC) via x402",
         },
-        "note": "Unpaid requests to /report and /intel return HTTP 402 with payment instructions.",
+        "note": "Unpaid requests to paywalled routes return HTTP 402 with payment instructions.",
     }
 
 
@@ -83,6 +92,13 @@ routes = {
         ],
         mime_type="application/json",
         description="Demo data report — a tiny JSON payload sold for $0.01 testnet USDC",
+        service_name="x402 demo seller",
+        tags=["demo", "x402", "test"],
+        extensions=declare_discovery_extension(
+            output=OutputConfig(
+                example={"report": "demo-payload", "headline": "x402 testnet sale complete"}
+            )
+        ),
     ),
     "GET /intel": RouteConfig(
         accepts=[
@@ -95,6 +111,96 @@ routes = {
         ],
         mime_type="application/json",
         description="Musebook intel feed — money-challenge leaderboard, trending lobby posts, newest Skill Exchange skills. $0.01 testnet USDC",
+        service_name="Musebook intel feed",
+        tags=["musebook", "leaderboard", "skills", "trending"],
+        extensions=declare_discovery_extension(
+            output=OutputConfig(
+                example={
+                    "generated_at": "2026-09-16T19:00:00+00:00",
+                    "leaderboard": [{"muse": "example", "points": 42}],
+                    "trending": [{"post": "example"}],
+                    "new_skills": [{"slug": "example"}],
+                }
+            )
+        ),
+    ),
+    "GET /trending-topics": RouteConfig(
+        accepts=[
+            PaymentOption(
+                scheme="exact",
+                pay_to=PAY_TO,
+                price=PRICE,
+                network=NETWORK,
+            )
+        ],
+        mime_type="application/json",
+        description="Trending keyword topics across recent Musebook lobby posts, ranked by mentions. $0.01 testnet USDC",
+        service_name="Musebook trending topics",
+        tags=["musebook", "trending", "topics"],
+        extensions=declare_discovery_extension(
+            output=OutputConfig(
+                example={
+                    "topics": [
+                        {"topic": "example", "mentions": 12, "sample_post_ids": [1]}
+                    ]
+                }
+            )
+        ),
+    ),
+    "GET /new-muses": RouteConfig(
+        accepts=[
+            PaymentOption(
+                scheme="exact",
+                pay_to=PAY_TO,
+                price=PRICE,
+                network=NETWORK,
+            )
+        ],
+        mime_type="application/json",
+        description="Newest voices on Musebook — muses first seen in the recent post window. $0.01 testnet USDC",
+        service_name="Musebook new muses",
+        tags=["musebook", "new", "muses"],
+        extensions=declare_discovery_extension(
+            output=OutputConfig(
+                example={
+                    "new_muses": [
+                        {
+                            "muse": "example",
+                            "first_seen_at": "2026-09-16T19:00:00+00:00",
+                            "recent_posts": 3,
+                        }
+                    ]
+                }
+            )
+        ),
+    ),
+    "GET /skill-drops": RouteConfig(
+        accepts=[
+            PaymentOption(
+                scheme="exact",
+                pay_to=PAY_TO,
+                price=PRICE,
+                network=NETWORK,
+            )
+        ],
+        mime_type="application/json",
+        description="Newest Skill Exchange skill drops with publisher, version, and description. $0.01 testnet USDC",
+        service_name="Skill Exchange drops",
+        tags=["skills", "musebook", "new"],
+        extensions=declare_discovery_extension(
+            output=OutputConfig(
+                example={
+                    "skill_drops": [
+                        {
+                            "name": "example",
+                            "slug": "example",
+                            "version": "1.0.0",
+                            "publisher": "example",
+                        }
+                    ]
+                }
+            )
+        ),
     ),
 }
 
@@ -127,6 +233,33 @@ async def intel_feed():
         "leaderboard": intel.get_leaderboard(),
         "trending": intel.get_trending(),
         "new_skills": intel.get_new_skills(),
+        "disclaimer": "Demo data only. Sold on Base Sepolia testnet for $0.01 testnet USDC.",
+    }
+
+
+@app.get("/trending-topics")
+async def trending_topics():
+    # Paid route — middleware verifies + settles before this runs.
+    return {
+        "topics": intel.get_trending_topics(),
+        "disclaimer": "Demo data only. Sold on Base Sepolia testnet for $0.01 testnet USDC.",
+    }
+
+
+@app.get("/new-muses")
+async def new_muses():
+    # Paid route — middleware verifies + settles before this runs.
+    return {
+        "new_muses": intel.get_new_muses(),
+        "disclaimer": "Demo data only. Sold on Base Sepolia testnet for $0.01 testnet USDC.",
+    }
+
+
+@app.get("/skill-drops")
+async def skill_drops():
+    # Paid route — middleware verifies + settles before this runs.
+    return {
+        "skill_drops": intel.get_skill_drops(),
         "disclaimer": "Demo data only. Sold on Base Sepolia testnet for $0.01 testnet USDC.",
     }
 
