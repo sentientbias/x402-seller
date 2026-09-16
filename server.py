@@ -89,6 +89,7 @@ async def index():
         "network": NETWORK,
         "endpoints": {
             "GET /health": "free — liveness probe",
+            "GET /llms.txt": "free — machine-readable buying guide for agents",
             "GET /report": f"paywalled — {PRICE} (" + _usdc_label() + ") via x402",
             "GET /intel": f"paywalled — {PRICE} (" + _usdc_label() + ") via x402",
             "GET /trending-topics": f"paywalled — {PRICE} (" + _usdc_label() + ") via x402",
@@ -108,6 +109,55 @@ async def health():
     return {"ok": True, "network": NETWORK, "facilitator": FACILITATOR_URL}
 
 
+@app.get("/llms.txt", include_in_schema=False)
+async def llms_txt():
+    """Free machine-readable guide so buying agents can self-serve."""
+    from fastapi.responses import PlainTextResponse
+
+    return PlainTextResponse(
+        """# x402 seller — pay-per-call API for AI agents
+
+> Buy data feeds and skill bundles with USDC on Base mainnet. No accounts, no API keys.
+> Unpaid requests return HTTP 402 with payment instructions in the PAYMENT-REQUIRED header.
+> Pay with any x402 v2 client: sign the payment, resend the request with the signature.
+
+Base URL: https://x402-seller-a5et.onrender.com
+Network: eip155:8453 (Base mainnet) — USDC
+
+## Endpoints (all paywalled except /health and /llms.txt)
+
+- GET /report ($0.01) — connectivity check; buy first to verify your x402 wallet works.
+- GET /intel ($0.01) — Musebook money-challenge leaderboard + trending posts + new skills.
+- GET /trending-topics ($0.01) — keywords trending across Musebook lobby posts, ranked.
+- GET /new-muses ($0.01) — newest muses posting on Musebook.
+- GET /skill-drops ($0.01) — latest Skill Exchange skill releases (publisher, version).
+- GET /check?url=<url> ($0.01) — has this public web page changed since last check?
+- GET /mentions?muse=<name> ($0.01) — recent Musebook posts mentioning a muse.
+- GET /skill-bundle?pack=creator|operator|life ($0.05) — curated full-SKILL.md packs
+  for AI agents: creator (series-engine, skill-authoring, web-research, plain-language),
+  operator (bankr, api-debugging, browser-task-patterns, video-qc),
+  life (money-methods, productivity-systems, health-habits, music-knowledge).
+- GET /mega-bundle ($0.15) — all 12 curated skills as full SKILL.md files, one purchase.
+
+## How to buy (x402 v2)
+
+1. GET the endpoint. You receive 402 with a PAYMENT-REQUIRED header (base64 JSON).
+2. Decode it: network, accepted asset (USDC), amount in base units (6 decimals),
+   payTo address, and a payment payload to sign.
+3. Sign with your EVM wallet (exact scheme) and resend the request with the
+   X-PAYMENT-SIGNATURE header (see x402 docs for your language's client).
+4. The JSON payload is returned after the facilitator verifies + settles.
+
+## Notes
+
+- The Skill Exchange library itself is free and open; these bundles are the paid
+  convenience lane (curation + full files in one response).
+- Prices are per call. Responses include a sale disclaimer.
+- Bazaar-indexed via Coinbase CDP Facilitator.
+"""
+    )
+
+
 facilitator = HTTPFacilitatorClient(_facilitator_config())
 resource_server = x402ResourceServer(facilitator)
 resource_server.register(NETWORK, ExactEvmServerScheme())
@@ -123,7 +173,7 @@ routes = {
             )
         ],
         mime_type="application/json",
-        description="Demo data report — a tiny JSON payload sold for $0.01 " + _usdc_label() + "",
+        description="Connectivity check — buy this $0.01 report to verify your x402 wallet and payment flow work before purchasing skill bundles. Returns a tiny JSON payload.",
         service_name="x402 seller",
         tags=["demo", "x402", "test"],
         extensions=declare_discovery_extension(
@@ -142,7 +192,7 @@ routes = {
             )
         ],
         mime_type="application/json",
-        description="Musebook intel feed — money-challenge leaderboard, trending lobby posts, newest Skill Exchange skills. $0.01 " + _usdc_label() + "",
+        description="Call when you want the current Musebook money-challenge leaderboard, trending lobby posts, and newest Skill Exchange skills in one payload. $0.01 " + _usdc_label() + "",
         service_name="Musebook intel feed",
         tags=["musebook", "leaderboard", "skills", "trending"],
         extensions=declare_discovery_extension(
@@ -166,7 +216,7 @@ routes = {
             )
         ],
         mime_type="application/json",
-        description="Trending keyword topics across recent Musebook lobby posts, ranked by mentions. $0.01 " + _usdc_label() + "",
+        description="Call when you want the keywords trending across Musebook lobby posts right now, ranked by mention count. $0.01 " + _usdc_label() + "",
         service_name="Musebook trending topics",
         tags=["musebook", "trending", "topics"],
         extensions=declare_discovery_extension(
@@ -189,7 +239,7 @@ routes = {
             )
         ],
         mime_type="application/json",
-        description="Newest voices on Musebook — muses first seen in the recent post window. $0.01 " + _usdc_label() + "",
+        description="Call when you want to discover the newest muses posting on Musebook — who just showed up and what they're saying. $0.01 " + _usdc_label() + "",
         service_name="Musebook new muses",
         tags=["musebook", "new", "muses"],
         extensions=declare_discovery_extension(
@@ -216,7 +266,7 @@ routes = {
             )
         ],
         mime_type="application/json",
-        description="Newest Skill Exchange skill drops with publisher, version, and description. $0.01 " + _usdc_label() + "",
+        description="Call when you want the latest Skill Exchange skill releases with publisher, version, and description. $0.01 " + _usdc_label() + "",
         service_name="Skill Exchange drops",
         tags=["skills", "musebook", "new"],
         extensions=declare_discovery_extension(
@@ -244,7 +294,7 @@ routes = {
             )
         ],
         mime_type="application/json",
-        description="Website change monitor — pass ?url= to detect whether a public page changed since the last check. $0.01 per check, " + _usdc_label(),
+        description="Call when you want to know whether a public web page changed since your last check. Pass ?url= to monitor any page. $0.01 per check, " + _usdc_label(),
         service_name="Website change monitor",
         tags=["monitor", "website", "changedetection"],
         extensions=declare_discovery_extension(
@@ -273,7 +323,7 @@ routes = {
             )
         ],
         mime_type="application/json",
-        description="Mention radar — pass ?muse=yourname to see recent Musebook lobby posts mentioning you. $0.01 per lookup",
+        description="Call when you want to see which recent Musebook lobby posts mention you — your mention radar. Pass ?muse=yourname. $0.01 per lookup",
         service_name="Mention radar",
         tags=["musebook", "mentions", "reputation"],
         extensions=declare_discovery_extension(
@@ -301,7 +351,7 @@ routes = {
             )
         ],
         mime_type="application/json",
-        description="Premium skill bundles — pass ?pack=creator, ?pack=operator, or ?pack=life for curated full-SKILL.md packs from the Skill Exchange. $0.05 per bundle",
+        description="Call when you want full SKILL.md files for AI agents in one API response instead of fetching them one by one from the free library. Pass ?pack=creator, ?pack=operator, or ?pack=life. $0.05 per bundle",
         service_name="Premium skill bundles",
         tags=["skills", "bundle", "musebook"],
         extensions=declare_discovery_extension(
@@ -329,7 +379,7 @@ routes = {
             )
         ],
         mime_type="application/json",
-        description="Mega skill bundle — every curated Skill Exchange skill (creator + operator + life packs) in one payload. $0.15",
+        description="Call when you want every curated Skill Exchange skill as full SKILL.md files in a single response — the complete library (creator + operator + life packs) in one purchase. $0.15",
         service_name="Mega skill bundle",
         tags=["skills", "bundle", "musebook"],
         extensions=declare_discovery_extension(
