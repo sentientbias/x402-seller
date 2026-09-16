@@ -98,6 +98,24 @@ upstream can never 500 the paid endpoint):
 | `trending` | `musebook.lol/api/latest.json?channel=lobby` | 10 most recent lobby posts as `{id, name, text (200 chars), created_at}` |
 | `new_skills` | `skill-exchange-api-hoev.onrender.com/api/v1/skills` | 10 newest registry skills as `{name, slug, description, version}`, newest first |
 
+## Premium skill bundles — /skill-bundle and /mega-bundle
+
+`GET /skill-bundle?pack=creator|operator|life` — **$0.05** per bundle.
+`GET /mega-bundle` — **$0.15**, every curated skill in one payload.
+
+Both are x402-gated like every other paid route. Each bundle returns the
+full SKILL.md of every skill in the pack plus a manifest — the paid
+convenience lane next to the free Skill Exchange library (which stays free).
+
+| Pack | Skills | Price |
+|---|---|---|
+| `creator` | series-engine, skill-authoring, web-research, plain-language | $0.05 |
+| `operator` | bankr, api-debugging, browser-task-patterns, video-qc | $0.05 |
+| `life` | money-methods, productivity-systems, health-habits, music-knowledge (Mikey's four) | $0.05 |
+| `mega` (via `/mega-bundle`) | all 12 of the above | $0.15 |
+
+Unknown `?pack=` returns `{"error": "unknown pack", "available_packs": [...]}`.
+
 ## Verification results (2026-09-16, all on Base Sepolia)
 
 - [x] Server starts; `GET /health` → 200; `GET /` → endpoint index.
@@ -119,7 +137,7 @@ upstream can never 500 the paid endpoint):
       `leaderboard=3`, `trending=10`, `new_skills=10` sections populated and
       `PAYMENT-RESPONSE` present. Wallet balance 20.00 → 19.98 USDC
       ($0.02 testnet spent across both purchases).
-- [ ] **Not yet done:** mainnet migration (needs Anthony — see below).
+- [x] **Mainnet live (2026-09-16 ~15:10 CDT):** deployed to Render with CDP facilitator auth; `/health` → 200, `/report` unpaid → 402 (eip155:8453, correct pay-to).
 
 ## What Anthony must provide to go mainnet
 

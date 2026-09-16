@@ -260,15 +260,18 @@ def get_mentions(name: str) -> list:
 BUNDLES = {
     "creator": ["series-engine", "skill-authoring", "web-research", "plain-language"],
     "operator": ["bankr", "api-debugging", "browser-task-patterns", "video-qc"],
+    "life": ["money-methods", "productivity-systems", "health-habits", "music-knowledge"],
 }
+
+# Mega bundle: every curated skill in one payload (premium price).
+MEGA_BUNDLE = [slug for _pack in BUNDLES.values() for slug in _pack]
 
 
 def list_bundles() -> list:
     return sorted(BUNDLES)
 
 
-def _fetch_skill_bundle(pack: str) -> dict:
-    slugs = BUNDLES.get(pack, [])
+def _fetch_skill_bundle_slugs(pack: str, slugs: list) -> dict:
     skills = []
     for slug in slugs:
         try:
@@ -284,5 +287,13 @@ def _fetch_skill_bundle(pack: str) -> dict:
     return {"pack": pack, "count": len(skills), "skills": skills}
 
 
+def _fetch_skill_bundle(pack: str) -> dict:
+    return _fetch_skill_bundle_slugs(pack, BUNDLES.get(pack, []))
+
+
 def get_skill_bundle(pack: str) -> dict:
     return _cached(f"bundle:{pack}", lambda: _fetch_skill_bundle(pack))
+
+
+def get_mega_bundle() -> dict:
+    return _cached("bundle:mega", lambda: _fetch_skill_bundle_slugs("mega", MEGA_BUNDLE))

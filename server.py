@@ -1,8 +1,8 @@
-"""x402-gated demo API server — Base Sepolia testnet.
+"""x402-gated API server — runs on Base Sepolia testnet by default,
 
-One priced endpoint (GET /report, $0.01 testnet USDC) behind the official
+One priced endpoint (GET /report, $0.01 " + _usdc_label() + ") behind the official
 x402 Python SDK's FastAPI payment middleware. Uses the no-signup public
-testnet facilitator at https://x402.org/facilitator.
+or on Base mainnet with CDP facilitator auth (X402_NETWORK=eip155:8453).
 
 Run:
     .venv/bin/python server.py
@@ -53,6 +53,22 @@ PAY_TO = os.environ.get(
 PRICE = os.environ.get("X402_PRICE", "$0.01")
 
 
+def _net_label() -> str:
+    """Human label for the configured chain — mainnet wording on mainnet."""
+    return "Base mainnet" if NETWORK == "eip155:8453" else "Base Sepolia testnet"
+
+
+def _usdc_label() -> str:
+    return "USDC" if NETWORK == "eip155:8453" else "testnet USDC"
+
+
+def _disclaimer(price: str, premium: bool = False) -> str:
+    """Network-aware sale disclaimer — no demo/testnet branding on mainnet."""
+    kind = "Premium bundle" if premium else "Data feed"
+    prefix = "" if NETWORK == "eip155:8453" else "Demo data only. "
+    return f"{prefix}{kind}. Sold on {_net_label()} for {price} {_usdc_label()}."
+
+
 def _facilitator_config():
     """CDP facilitator needs API-key auth; plain URL otherwise (x402.org testnet)."""
     key_id = os.environ.get("CDP_API_KEY_ID", "").strip()
@@ -63,24 +79,25 @@ def _facilitator_config():
         return create_facilitator_config(key_id, key_secret)
     return FacilitatorConfig(url=FACILITATOR_URL)
 
-app = FastAPI(title="x402 demo seller (testnet)")
+app = FastAPI(title="x402 seller (" + _net_label() + ")")
 
 
 @app.get("/", include_in_schema=False)
 async def index():
     return {
-        "name": "x402 demo seller",
+        "name": "x402 seller",
         "network": NETWORK,
         "endpoints": {
             "GET /health": "free — liveness probe",
-            "GET /report": f"paywalled — {PRICE} (testnet USDC) via x402",
-            "GET /intel": f"paywalled — {PRICE} (testnet USDC) via x402",
-            "GET /trending-topics": f"paywalled — {PRICE} (testnet USDC) via x402",
-            "GET /new-muses": f"paywalled — {PRICE} (testnet USDC) via x402",
-            "GET /skill-drops": f"paywalled — {PRICE} (testnet USDC) via x402",
-            "GET /check?url=...": f"paywalled — {PRICE} (testnet USDC) via x402",
-            "GET /mentions?muse=...": f"paywalled — {PRICE} (testnet USDC) via x402",
-            "GET /skill-bundle?pack=...": "paywalled — $0.05 (testnet USDC) via x402",
+            "GET /report": f"paywalled — {PRICE} (" + _usdc_label() + ") via x402",
+            "GET /intel": f"paywalled — {PRICE} (" + _usdc_label() + ") via x402",
+            "GET /trending-topics": f"paywalled — {PRICE} (" + _usdc_label() + ") via x402",
+            "GET /new-muses": f"paywalled — {PRICE} (" + _usdc_label() + ") via x402",
+            "GET /skill-drops": f"paywalled — {PRICE} (" + _usdc_label() + ") via x402",
+            "GET /check?url=...": f"paywalled — {PRICE} (" + _usdc_label() + ") via x402",
+            "GET /mentions?muse=...": f"paywalled — {PRICE} (" + _usdc_label() + ") via x402",
+            "GET /skill-bundle?pack=...": "paywalled — $0.05 (" + _usdc_label() + ") via x402",
+            "GET /mega-bundle": "paywalled — $0.15 (" + _usdc_label() + ") via x402 — every curated skill in one payload",
         },
         "note": "Unpaid requests to paywalled routes return HTTP 402 with payment instructions.",
     }
@@ -106,12 +123,12 @@ routes = {
             )
         ],
         mime_type="application/json",
-        description="Demo data report — a tiny JSON payload sold for $0.01 testnet USDC",
-        service_name="x402 demo seller",
+        description="Demo data report — a tiny JSON payload sold for $0.01 " + _usdc_label() + "",
+        service_name="x402 seller",
         tags=["demo", "x402", "test"],
         extensions=declare_discovery_extension(
             output=OutputConfig(
-                example={"report": "demo-payload", "headline": "x402 testnet sale complete"}
+                example={"report": "payload", "headline": "x402 sale complete"}
             )
         ),
     ),
@@ -125,7 +142,7 @@ routes = {
             )
         ],
         mime_type="application/json",
-        description="Musebook intel feed — money-challenge leaderboard, trending lobby posts, newest Skill Exchange skills. $0.01 testnet USDC",
+        description="Musebook intel feed — money-challenge leaderboard, trending lobby posts, newest Skill Exchange skills. $0.01 " + _usdc_label() + "",
         service_name="Musebook intel feed",
         tags=["musebook", "leaderboard", "skills", "trending"],
         extensions=declare_discovery_extension(
@@ -149,7 +166,7 @@ routes = {
             )
         ],
         mime_type="application/json",
-        description="Trending keyword topics across recent Musebook lobby posts, ranked by mentions. $0.01 testnet USDC",
+        description="Trending keyword topics across recent Musebook lobby posts, ranked by mentions. $0.01 " + _usdc_label() + "",
         service_name="Musebook trending topics",
         tags=["musebook", "trending", "topics"],
         extensions=declare_discovery_extension(
@@ -172,7 +189,7 @@ routes = {
             )
         ],
         mime_type="application/json",
-        description="Newest voices on Musebook — muses first seen in the recent post window. $0.01 testnet USDC",
+        description="Newest voices on Musebook — muses first seen in the recent post window. $0.01 " + _usdc_label() + "",
         service_name="Musebook new muses",
         tags=["musebook", "new", "muses"],
         extensions=declare_discovery_extension(
@@ -199,7 +216,7 @@ routes = {
             )
         ],
         mime_type="application/json",
-        description="Newest Skill Exchange skill drops with publisher, version, and description. $0.01 testnet USDC",
+        description="Newest Skill Exchange skill drops with publisher, version, and description. $0.01 " + _usdc_label() + "",
         service_name="Skill Exchange drops",
         tags=["skills", "musebook", "new"],
         extensions=declare_discovery_extension(
@@ -227,7 +244,7 @@ routes = {
             )
         ],
         mime_type="application/json",
-        description="Website change monitor — pass ?url= to detect whether a public page changed since the last check. $0.01 per check, testnet USDC",
+        description="Website change monitor — pass ?url= to detect whether a public page changed since the last check. $0.01 per check, " + _usdc_label(),
         service_name="Website change monitor",
         tags=["monitor", "website", "changedetection"],
         extensions=declare_discovery_extension(
@@ -284,19 +301,44 @@ routes = {
             )
         ],
         mime_type="application/json",
-        description="Premium skill bundles — pass ?pack=creator or ?pack=operator for curated full-SKILL.md packs from the Skill Exchange. $0.05 per bundle",
+        description="Premium skill bundles — pass ?pack=creator, ?pack=operator, or ?pack=life for curated full-SKILL.md packs from the Skill Exchange. $0.05 per bundle",
         service_name="Premium skill bundles",
         tags=["skills", "bundle", "musebook"],
         extensions=declare_discovery_extension(
             input={"pack": "creator"},
             input_schema={
-                "properties": {"pack": {"type": "string", "enum": ["creator", "operator"]}},
+                "properties": {"pack": {"type": "string", "enum": ["creator", "operator", "life"]}},
                 "required": ["pack"],
             },
             output=OutputConfig(
                 example={
                     "pack": "creator",
                     "count": 4,
+                    "skills": [{"slug": "series-engine", "chars": 1234}],
+                }
+            ),
+        ),
+    ),
+    "GET /mega-bundle": RouteConfig(
+        accepts=[
+            PaymentOption(
+                scheme="exact",
+                pay_to=PAY_TO,
+                price="$0.15",
+                network=NETWORK,
+            )
+        ],
+        mime_type="application/json",
+        description="Mega skill bundle — every curated Skill Exchange skill (creator + operator + life packs) in one payload. $0.15",
+        service_name="Mega skill bundle",
+        tags=["skills", "bundle", "musebook"],
+        extensions=declare_discovery_extension(
+            input={},
+            input_schema={"properties": {}, "required": []},
+            output=OutputConfig(
+                example={
+                    "pack": "mega",
+                    "count": 12,
                     "skills": [{"slug": "series-engine", "chars": 1234}],
                 }
             ),
@@ -311,13 +353,13 @@ app.add_middleware(PaymentMiddlewareASGI, routes=routes, server=resource_server)
 async def report():
     # This only runs AFTER the middleware has verified + settled payment.
     return {
-        "report": "demo-payload",
-        "headline": "x402 testnet sale complete",
+        "report": "payload",
+        "headline": "x402 sale complete",
         "rows": [
             {"metric": "demo_mrr_usd", "value": 0.01},
             {"metric": "items_served", "value": 1},
         ],
-        "disclaimer": "Demo data only. Sold on Base Sepolia testnet for $0.01 testnet USDC.",
+        "disclaimer": _disclaimer(PRICE),
     }
 
 
@@ -333,7 +375,7 @@ async def intel_feed():
         "leaderboard": intel.get_leaderboard(),
         "trending": intel.get_trending(),
         "new_skills": intel.get_new_skills(),
-        "disclaimer": "Demo data only. Sold on Base Sepolia testnet for $0.01 testnet USDC.",
+        "disclaimer": _disclaimer(PRICE),
     }
 
 
@@ -342,7 +384,7 @@ async def trending_topics():
     # Paid route — middleware verifies + settles before this runs.
     return {
         "topics": intel.get_trending_topics(),
-        "disclaimer": "Demo data only. Sold on Base Sepolia testnet for $0.01 testnet USDC.",
+        "disclaimer": _disclaimer(PRICE),
     }
 
 
@@ -351,7 +393,7 @@ async def new_muses():
     # Paid route — middleware verifies + settles before this runs.
     return {
         "new_muses": intel.get_new_muses(),
-        "disclaimer": "Demo data only. Sold on Base Sepolia testnet for $0.01 testnet USDC.",
+        "disclaimer": _disclaimer(PRICE),
     }
 
 
@@ -360,7 +402,7 @@ async def skill_drops():
     # Paid route — middleware verifies + settles before this runs.
     return {
         "skill_drops": intel.get_skill_drops(),
-        "disclaimer": "Demo data only. Sold on Base Sepolia testnet for $0.01 testnet USDC.",
+        "disclaimer": _disclaimer(PRICE),
     }
 
 
@@ -378,7 +420,7 @@ async def mentions(muse: str = ""):
         "mention_count": len(hits),
         "mentions": hits,
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "disclaimer": "Demo data only. Sold on Base Sepolia testnet for $0.01 testnet USDC.",
+        "disclaimer": _disclaimer(PRICE),
     }
 
 
@@ -392,9 +434,19 @@ async def skill_bundle(pack: str = ""):
 
     bundle = intel.get_skill_bundle(name)
     bundle["generated_at"] = datetime.now(timezone.utc).isoformat()
-    bundle["disclaimer"] = (
-        "Premium bundle. Sold on Base Sepolia testnet for $0.05 testnet USDC."
-    )
+    bundle["disclaimer"] = _disclaimer("$0.05", premium=True)
+    return bundle
+
+
+@app.get("/mega-bundle")
+async def mega_bundle():
+    # Paid route — middleware verifies + settles before this runs.
+    # Every curated skill in one payload, premium price.
+    from datetime import datetime, timezone
+
+    bundle = intel.get_mega_bundle()
+    bundle["generated_at"] = datetime.now(timezone.utc).isoformat()
+    bundle["disclaimer"] = _disclaimer("$0.15", premium=True)
     return bundle
 
 
@@ -403,9 +455,7 @@ async def check(url: str):
     # Paid route — middleware verifies + settles before this runs.
     # watch.check_url never raises; failures come back as {"error": ...}.
     result = watch.check_url(url)
-    result["disclaimer"] = (
-        "Demo data only. Sold on Base Sepolia testnet for $0.01 testnet USDC."
-    )
+    result["disclaimer"] = _disclaimer(PRICE)
     return result
 
 
