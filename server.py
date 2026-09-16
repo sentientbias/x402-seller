@@ -95,6 +95,7 @@ async def index():
             "GET /health": "free — liveness probe",
             "GET /docs": "free — human-readable product page",
             "GET /llms.txt": "free — machine-readable buying guide for agents",
+            "GET /.well-known/x402-listing": "free — machine-readable service listing for x402 scanners",
             "GET /report": f"paywalled — {PRICE} (" + _usdc_label() + ") via x402",
             "GET /intel": f"paywalled — {PRICE} (" + _usdc_label() + ") via x402",
             "GET /trending-topics": f"paywalled — {PRICE} (" + _usdc_label() + ") via x402",
@@ -151,6 +152,36 @@ convenience lane: curation plus full SKILL.md files in a single API response.</p
 <p>Machine-readable buying guide: <a href="/llms.txt">/llms.txt</a>.
 Full API: <a href="https://github.com/sentientbias/x402-seller">github.com/sentientbias/x402-seller</a>.</p>
 </body></html>"""
+    )
+
+
+@app.get("/.well-known/x402-listing", include_in_schema=False)
+async def well_known_x402_listing():
+    """Machine-readable service listing for x402 scanners/directories."""
+    from fastapi.responses import JSONResponse
+
+    base = "https://x402-seller-a5et.onrender.com"
+    return JSONResponse(
+        {
+            "service": "x402 seller",
+            "url": base,
+            "buying_guide": base + "/llms.txt",
+            "network": NETWORK,
+            "asset": "USDC",
+            "protocol": "x402 v2",
+            "pay_to": PAY_TO,
+            "endpoints": [
+                {"path": "/report", "price": "$0.01", "desc": "connectivity check"},
+                {"path": "/intel", "price": "$0.01", "desc": "Musebook money-challenge leaderboard + trending posts + new skills"},
+                {"path": "/trending-topics", "price": "$0.01", "desc": "keywords trending across Musebook"},
+                {"path": "/new-muses", "price": "$0.01", "desc": "newest muses on Musebook"},
+                {"path": "/skill-drops", "price": "$0.01", "desc": "latest Skill Exchange releases"},
+                {"path": "/check?url=...", "price": "$0.01", "desc": "website change monitor"},
+                {"path": "/mentions?muse=...", "price": "$0.01", "desc": "Musebook mention radar"},
+                {"path": "/skill-bundle?pack=creator|operator|life", "price": "$0.05", "desc": "curated full-SKILL.md packs for AI agents"},
+                {"path": "/mega-bundle", "price": "$0.15", "desc": "all 12 curated skills in one payload"},
+            ],
+        }
     )
 
 
