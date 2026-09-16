@@ -36,7 +36,68 @@ from x402.extensions.bazaar.resource_service import (
 )
 
 import intel
+import propass
 import watch
+
+# --- Exchange Pro passes ---------------------------------------------------
+# Ed25519 PUBLIC key used to verify pro-pass tokens (X-Pro-Pass header).
+# This is a public key -- safe to hardcode and commit. Override with the
+# PROPASS_VERIFY_KEY env var to rotate without a code change. The matching
+# PRIVATE key lives ONLY in the Skill Exchange API's PROPASS_SIGNING_KEY env
+# var; it must never appear here or in this repo.
+PROPASS_VERIFY_KEY = os.environ.get(
+    "PROPASS_VERIFY_KEY",
+    "ecef4da154202c48560d47aac62d69cb4119c41bc641526fb4bc9b57c29236d6",
+).strip()
+
+
+class ProPassMiddleware:
+    """Outermost ASGI middleware: a request carrying a valid X-Pro-Pass
+    header skips the x402 payment flow entirely (free Exchange Pro access
+    earned via Skill Exchange referrals).
+
+    Security: the ONLY bypass condition is a valid ed25519 signature from the
+    Exchange API's signing key plus a non-expired payload. Anything else --
+    missing header, malformed token, bad signature, expired pass -- falls
+    through to the normal payment middleware, which 402s as usual.
+
+    Implementation note: on a valid pass we call the router directly,
+    skipping the payment middleware. FastAPI deliberately nests its
+    AsyncExitStackMiddleware *inside* user middlewares, so we recreate the
+    ``fastapi_middleware_astack`` scope entry it would have set -- without
+    this, route handlers fail their scope assertion.
+    """
+
+    def __init__(self, app, router):
+        self.app = app
+        self.router = router
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http":
+            token = None
+            for name, value in scope.get("headers", []):
+                if name == b"x-pro-pass":
+                    token = value.decode("latin1")
+                    break
+            if token:
+                payload = propass.verify_pro_pass(token, PROPASS_VERIFY_KEY)
+                if payload is not None:
+                    # Valid pass: log the redemption and route straight to the
+                    # endpoint, bypassing the payment middleware.
+                    print(
+                        f"[propass] redeemed pid={payload['pid']} "
+                        f"handle={payload['handle']} "
+                        f"path={scope.get('path', '')}",
+                        flush=True,
+                    )
+                    from contextlib import AsyncExitStack
+
+                    async with AsyncExitStack() as stack:
+                        scope.setdefault("fastapi_middleware_astack", stack)
+                        await self.router(scope, receive, send)
+                    return
+                # Invalid/expired pass: fall through to normal 402 flow.
+        await self.app(scope, receive, send)
 import landing
 
 # Base Sepolia (testnet). Mainnet Base is eip155:8453.
@@ -458,6 +519,8 @@ routes = {
 }
 
 app.add_middleware(PaymentMiddlewareASGI, routes=routes, server=resource_server)
+# Pro-pass bypass must wrap the payment middleware (last added = outermost).
+app.add_middleware(ProPassMiddleware, router=app.router)
 
 
 @app.get("/report")
