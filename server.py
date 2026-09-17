@@ -12,6 +12,7 @@ Then in another terminal:
     .venv/bin/python buyer.py
 """
 
+import asyncio
 import os
 
 # --- sandbox proxy fix -----------------------------------------------------
@@ -124,6 +125,12 @@ def _validate_check_params(params: dict) -> str | None:
         return "only http(s) URLs are supported in 'url' parameter"
     if not parts.hostname:
         return "URL has no hostname in 'url' parameter"
+    # SSRF denylist at QUOTE time: a malicious URL gets a 400 here, before
+    # the payment middleware can emit a 402 ("validate before you quote").
+    # DNS resolution is blocking, so the middleware runs this in a thread.
+    err = watch.validate_url(url)
+    if err:
+        return f"URL rejected in 'url' parameter: {err}"
     return None
 
 
@@ -192,7 +199,9 @@ class ValidateBeforePayMiddleware:
             if validator is not None:
                 query = scope.get("query_string", b"").decode("latin-1")
                 params = dict(parse_qsl(query, keep_blank_values=True))
-                error = validator(params)
+                # Validators may do blocking DNS (SSRF denylist) — keep the
+                # event loop free.
+                error = await asyncio.to_thread(validator, params)
                 if error:
                     response = JSONResponse({"detail": error}, status_code=400)
                     await response(scope, receive, send)

@@ -51,28 +51,63 @@ def _save_snapshots(snaps: dict):
         pass
 
 
-def _validate_url(url: str) -> str | None:
-    """Return an error string, or None if the URL is fetchable."""
+def _ip_rejection(ip_str: str) -> str | None:
+    """Return a rejection reason if the IP is not a public routable address."""
+    try:
+        ip = ipaddress.ip_address(ip_str)
+    except ValueError:
+        return "unparseable IP address"
+    if ip.is_loopback:
+        return "loopback addresses are not allowed"
+    if ip.is_link_local:
+        return "link-local addresses are not allowed"
+    if ip.is_multicast:
+        return "multicast addresses are not allowed"
+    if ip.is_unspecified:
+        return "unspecified (0.0.0.0) addresses are not allowed"
+    if ip.is_private:
+        return "private addresses are not allowed"
+    if ip.is_reserved:
+        return "reserved addresses are not allowed"
+    if not ip.is_global:
+        return "non-routable addresses are not allowed"
+    return None
+
+
+def validate_url(url: str) -> str | None:
+    """Full SSRF validation. Returns an error string, or None if fetchable.
+
+    Safe to call at quote time (before any 402 payment challenge) and again
+    immediately before fetching — the second call closes the DNS-rebinding
+    window between validation and the actual connection.
+    """
     try:
         parts = urlparse(url)
     except Exception:
         return "unparseable URL"
     if parts.scheme not in ("http", "https"):
         return "only http(s) URLs are supported"
-    if not parts.hostname:
+    if parts.username or parts.password:
+        return "credentials in URL are not allowed"
+    host = parts.hostname
+    if not host:
         return "URL has no hostname"
     try:
-        infos = socket.getaddrinfo(parts.hostname, None)
+        infos = socket.getaddrinfo(host, None, type=socket.SOCK_STREAM)
     except Exception:
         return "hostname does not resolve"
+    if not infos:
+        return "hostname does not resolve"
     for info in infos:
-        ip = info[4][0]
-        try:
-            if ipaddress.ip_address(ip).is_private:
-                return "private/loopback addresses are not allowed"
-        except ValueError:
-            return "unresolvable address"
+        reason = _ip_rejection(info[4][0])
+        if reason:
+            return reason
     return None
+
+
+# Backwards-compatible alias (older call sites).
+def _validate_url(url: str) -> str | None:
+    return validate_url(url)
 
 
 def _extract_text(html: str) -> str:
@@ -81,8 +116,47 @@ def _extract_text(html: str) -> str:
     return _WS_RE.sub(" ", text).strip()
 
 
+_MAX_REDIRECTS = 5
+
+
+def _fetch_validated(url: str):
+    """Fetch with manual redirect-following: every redirect target is
+    SSRF-validated before following, so a 3xx can't bounce the fetcher
+    onto an internal address."""
+    current = url
+    for _ in range(_MAX_REDIRECTS + 1):
+        err = validate_url(current)
+        if err:
+            return None, {"url": url, "error": f"redirect target rejected: {err}"}
+        try:
+            r = httpx.get(
+                current,
+                timeout=20,
+                follow_redirects=False,
+                headers={"User-Agent": "x402-change-monitor/1.0"},
+            )
+        except Exception as e:
+            return None, {"url": url, "error": f"fetch failed: {type(e).__name__}"}
+        if r.status_code in (301, 302, 303, 307, 308):
+            loc = r.headers.get("location")
+            if not loc:
+                return None, {"url": url, "error": "redirect with no location"}
+            # Resolve relative redirects against the current URL, then the
+            # loop-top validate_url() re-checks the absolute target.
+            from urllib.parse import urljoin
+
+            current = urljoin(current, loc)
+            continue
+        try:
+            r.raise_for_status()
+        except Exception as e:
+            return None, {"url": url, "error": f"fetch failed: {type(e).__name__}"}
+        return r, None
+    return None, {"url": url, "error": "too many redirects"}
+
+
 def check_url(url: str) -> dict:
-    err = _validate_url(url)
+    err = validate_url(url)
     if err:
         return {"url": url, "error": err}
 
@@ -91,18 +165,18 @@ def check_url(url: str) -> dict:
         _, result = _fetch_cache[url]
         return result
 
-    try:
-        r = httpx.get(
-            url,
-            timeout=20,
-            follow_redirects=True,
-            headers={"User-Agent": "x402-change-monitor/1.0"},
-        )
-        r.raise_for_status()
-    except Exception as e:
-        result = {"url": url, "error": f"fetch failed: {type(e).__name__}"}
-        _fetch_cache[url] = (now, result)
-        return result
+    # Re-validate immediately before fetching: closes the DNS-rebinding
+    # window between the quote-time check and the actual connection.
+    # (Full IP pinning — dialing the vetted IP with a Host header — is the
+    # remaining hardening step if this ever needs to be airtight.)
+    err = validate_url(url)
+    if err:
+        return {"url": url, "error": err}
+
+    r, fetch_err = _fetch_validated(url)
+    if fetch_err:
+        _fetch_cache[url] = (now, fetch_err)
+        return fetch_err
 
     text = _extract_text(r.text)
     digest = hashlib.sha256(text.encode("utf-8", "replace")).hexdigest()
