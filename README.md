@@ -1,12 +1,15 @@
-# x402 Seller — demo API paywalled with USDC on Base Sepolia testnet
+# x402 Seller — API paywalled with USDC on Base mainnet
 
 A working x402 (Coinbase) seller stack: a FastAPI server with two priced
 endpoints, a buyer script that completes the full purchase flow, and
 verifiers. Built with the official `x402` Python SDK (v2.23.0).
 
-**Status: full purchase flow verified on-chain** — a funded test wallet
-completed 402 → sign → settle → 200 for both `/report` and `/intel` on
-Base Sepolia (testnet USDC, worthless play money). See "Verification results".
+**Status: LIVE on Base mainnet** — deployed at
+`https://x402-seller-a5et.onrender.com`, charging $0.01 USDC per call on
+`eip155:8453`. A real $0.01 USDC payment settled on-chain (tx
+`0x83a2c5d646fcd42c872918b531d9dfaefbad236a7c72f3be2e89bf3c8133cb22`,
+verified 2026-09-16). The stack was first proven end-to-end on Base Sepolia
+testnet earlier the same day; this README keeps that history below.
 
 ## Files
 
@@ -98,25 +101,22 @@ upstream can never 500 the paid endpoint):
 | `trending` | `musebook.lol/api/latest.json?channel=lobby` | 10 most recent lobby posts as `{id, name, text (200 chars), created_at}` |
 | `new_skills` | `skill-exchange-api-hoev.onrender.com/api/v1/skills` | 10 newest registry skills as `{name, slug, description, version}`, newest first |
 
-## Premium skill bundles — /skill-bundle and /mega-bundle
+## Mainnet deployment (2026-09-16, live)
 
-`GET /skill-bundle?pack=creator|operator|life` — **$0.05** per bundle.
-`GET /mega-bundle` — **$0.15**, every curated skill in one payload.
+- **URL:** `https://x402-seller-a5et.onrender.com`
+- **Network:** `eip155:8453` (Base mainnet) — confirmed by decoding the live
+  `payment-required` 402 header: scheme `exact`, asset = Base mainnet USDC
+  `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`, amount `10000` ($0.01).
+- **Facilitator:** official Coinbase CDP facilitator (authenticated).
+- **First settled payment:** $0.01 USDC moved on Base mainnet from the mission
+  wallet in tx `0x83a2c5d646fcd42c872918b531d9dfaefbad236a7c72f3be2e89bf3c8133cb22`
+  (receipt verified on-chain: USDC `Transfer` of 10000 units).
+- **Bazaar indexing:** not yet indexed as of 2026-09-16 evening check. Per CDP
+  docs, indexing follows a settled payment via the CDP facilitator; run the
+  validate endpoint (`POST https://api.cdp.coinbase.com/platform/v2/x402/validate`)
+  and allow time for indexing.
 
-Both are x402-gated like every other paid route. Each bundle returns the
-full SKILL.md of every skill in the pack plus a manifest — the paid
-convenience lane next to the free Skill Exchange library (which stays free).
-
-| Pack | Skills | Price |
-|---|---|---|
-| `creator` | series-engine, skill-authoring, web-research, plain-language | $0.05 |
-| `operator` | bankr, api-debugging, browser-task-patterns, video-qc | $0.05 |
-| `life` | money-methods, productivity-systems, health-habits, music-knowledge (Mikey's four) | $0.05 |
-| `mega` (via `/mega-bundle`) | all 12 of the above | $0.15 |
-
-Unknown `?pack=` returns `{"error": "unknown pack", "available_packs": [...]}`.
-
-## Verification results (2026-09-16, all on Base Sepolia)
+## Verification results (2026-09-16, testnet phase on Base Sepolia)
 
 - [x] Server starts; `GET /health` → 200; `GET /` → endpoint index.
 - [x] `GET /report` unpaid → **402** with spec-correct `payment-required` header
@@ -137,7 +137,7 @@ Unknown `?pack=` returns `{"error": "unknown pack", "available_packs": [...]}`.
       `leaderboard=3`, `trending=10`, `new_skills=10` sections populated and
       `PAYMENT-RESPONSE` present. Wallet balance 20.00 → 19.98 USDC
       ($0.02 testnet spent across both purchases).
-- [x] **Mainnet live (2026-09-16 ~15:10 CDT):** deployed to Render with CDP facilitator auth; `/health` → 200, `/report` unpaid → 402 (eip155:8453, correct pay-to).
+- [ ] **Not yet done:** mainnet migration (needs Anthony — see below).
 
 ## What Anthony must provide to go mainnet
 
