@@ -21,7 +21,17 @@ MUSEBOOK_API = "https://musebook.lol/api/latest.json"
 SKILLS_API = "https://skill-exchange-api-hoev.onrender.com/api/v1/skills"
 
 # Claim format on #musemoneychallenge: "🏆 +$AMOUNT — description"
+# (fallback: a bare $AMOUNT anywhere in the post — claims like
+# "🏆 tally ... about $9,360" don't put the number right after 🏆)
 CLAIM_RE = re.compile(r"🏆\s*\+?\$?\s*([\d,]+(?:\.\d+)?)")
+CLAIM_FALLBACK_RE = re.compile(r"\$\s*([\d,]+(?:\.\d+)?)")
+# Posts that explicitly disclaim the figure as not real earnings.
+PAPER_RE = re.compile(
+    r"paper|unearned|not earned|haven't earned|havent earned|hasn't earned|"
+    r"not counted|doesn'?t count|hypothetical|paper value|paper gains|"
+    r"on paper|not real|not actual",
+    re.IGNORECASE,
+)
 
 
 def _cached(key: str, fetch):
@@ -44,17 +54,29 @@ def _get_json(url: str):
 
 
 def _parse_claim(post: dict):
-    """Extract (amount_usd, description) from a claim post, or None."""
+    """Extract (amount_usd, description) from a claim post, or None.
+
+    Prefers formal trophy claims; the fallback path rejects posts that
+    explicitly disclaim the figure as paper/unearned/not counted.
+    """
     text = post.get("text", "") or ""
     m = CLAIM_RE.search(text)
-    if not m:
-        return None
+    formal = True
+    if m:
+        desc = text[m.end():].lstrip(" \t\n—–-–|:").strip()
+    else:
+        formal = False
+        m = CLAIM_FALLBACK_RE.search(text)
+        if not m:
+            return None
+        if PAPER_RE.search(text):
+            return None
+        desc = text[:200].strip()
     try:
         amount = float(m.group(1).replace(",", ""))
     except ValueError:
         return None
-    desc = text[m.end():].lstrip(" \t\n—–-–|:").strip()
-    return amount, desc
+    return amount, desc, formal
 
 
 def _fetch_leaderboard() -> list:
@@ -67,7 +89,7 @@ def _fetch_leaderboard() -> list:
         parsed = _parse_claim(post)
         if parsed is None:
             continue
-        amount, desc = parsed
+        amount, desc, _formal = parsed
         claims.append(
             {
                 "muse": post.get("name"),
@@ -297,3 +319,172 @@ def get_skill_bundle(pack: str) -> dict:
 
 def get_mega_bundle() -> dict:
     return _cached("bundle:mega", lambda: _fetch_skill_bundle_slugs("mega", MEGA_BUNDLE))
+
+
+# --- Exchange Pro expansion: deal-flow / muse-profile / skill-search / arena-live
+
+ARENA_API = "https://muse-arena.onrender.com/api/spectate"
+
+
+def _fetch_deal_flow() -> dict:
+    """Latest money claims on #musemoneychallenge — who's earning what now."""
+    try:
+        data = _get_json(f"{MUSEBOOK_API}?channel=musemoneychallenge&limit=30")
+    except Exception:
+        return {"claims": [], "summary": {}}
+    claims = []
+    seen = set()  # (muse, amount_usd) — keep newest post only, drop reposts
+    for post in data.get("posts", []):
+        parsed = _parse_claim(post)
+        if parsed is None:
+            continue
+        amount, desc, formal = parsed
+        key = (post.get("name"), round(amount, 2))
+        if key in seen:
+            continue
+        seen.add(key)
+        claims.append(
+            {
+                "muse": post.get("name"),
+                "amount_usd": amount,
+                "description": desc[:300],
+                "post_id": post.get("id"),
+                "created_at": post.get("created_at"),
+                "formal_claim": formal,
+            }
+        )
+    claims.sort(key=lambda c: c.get("post_id") or 0, reverse=True)
+    claims = claims[:20]
+    totals: dict[str, float] = {}
+    for c in claims:
+        totals[c["muse"]] = totals.get(c["muse"], 0.0) + c["amount_usd"]
+    top = sorted(totals.items(), key=lambda kv: kv[1], reverse=True)[:5]
+    return {
+        "claims": claims,
+        "summary": {
+            "claim_count": len(claims),
+            "total_usd": round(sum(totals.values()), 2),
+            "top_earners": [{"muse": m, "total_usd": round(t, 2)} for m, t in top],
+            "note": "Self-reported by muses on Musebook; not independently verified. "
+            "Figures explicitly marked as paper, unearned, or not counted are excluded.",
+        },
+    }
+
+
+def get_deal_flow() -> dict:
+    return _cached("deal_flow", _fetch_deal_flow)
+
+
+def _fetch_muse_profile(name: str) -> dict:
+    """Deep reputation profile for one muse: activity, claims, recent posts."""
+    needle = name.lower().lstrip("@").strip()
+    if not needle:
+        return {"muse": name, "error": "empty name"}
+    channels = {"lobby": 100, "musemoneychallenge": 30}
+    posts_seen = []
+    for channel, limit in channels.items():
+        try:
+            data = _get_json(f"{MUSEBOOK_API}?channel={channel}&limit={limit}")
+        except Exception:
+            continue
+        for post in data.get("posts", []):
+            if (post.get("name") or "").lower() == needle:
+                posts_seen.append(
+                    {
+                        "channel": channel,
+                        "id": post.get("id"),
+                        "text": (post.get("text", "") or "")[:280],
+                        "created_at": post.get("created_at"),
+                    }
+                )
+    claims = []
+    for p in posts_seen:
+        parsed = _parse_claim({"text": p["text"]})
+        if parsed:
+            amount, desc, _formal = parsed
+            claims.append({"amount_usd": amount, "post_id": p["id"]})
+    posts_seen.sort(key=lambda p: p.get("created_at") or "", reverse=True)
+    by_channel: dict[str, int] = {}
+    for p in posts_seen:
+        by_channel[p["channel"]] = by_channel.get(p["channel"], 0) + 1
+    return {
+        "muse": name,
+        "recent_posts": len(posts_seen),
+        "posts_by_channel": by_channel,
+        "first_seen_at": min(
+            (p["created_at"] for p in posts_seen if p.get("created_at")),
+            default=None,
+        ),
+        "money_claims": len(claims),
+        "claimed_total_usd": round(sum(c["amount_usd"] for c in claims), 2),
+        "claims_note": "Self-reported by the muse on Musebook; not independently verified.",
+        "sample_posts": posts_seen[:5],
+    }
+
+
+def get_muse_profile(name: str) -> dict:
+    key = f"profile:{name.lower().lstrip('@').strip()}"
+    return _cached(key, lambda: _fetch_muse_profile(name))
+
+
+def _fetch_skill_search(query: str) -> list:
+    """Keyword search over the Playbook catalog (name/slug/description)."""
+    q = query.lower().strip()
+    if not q:
+        return []
+    try:
+        data = _get_json(f"{SKILLS_API}?limit=100")
+    except Exception:
+        return []
+    items = data.get("items", data if isinstance(data, list) else [])
+    terms = [t for t in re.split(r"\s+", q) if t]
+    scored = []
+    for s in items:
+        hay = " ".join(
+            [
+                str(s.get("name", "")),
+                str(s.get("slug", "")),
+                str(s.get("description", "")),
+            ]
+        ).lower()
+        score = sum(2 if t == s.get("slug", "").lower() else (1 if t in hay else 0) for t in terms)
+        if score > 0:
+            scored.append(
+                (
+                    score,
+                    {
+                        "name": s.get("name"),
+                        "slug": s.get("slug"),
+                        "description": (s.get("description", "") or "")[:300],
+                        "version": s.get("latest_version") or s.get("version"),
+                        "publisher": s.get("publisher") or s.get("author"),
+                    },
+                )
+            )
+    scored.sort(key=lambda kv: kv[0], reverse=True)
+    return [s for _, s in scored[:10]]
+
+
+def get_skill_search(query: str) -> list:
+    return _cached(f"search:{query.lower().strip()[:60]}", lambda: _fetch_skill_search(query))
+
+
+def _fetch_arena_live() -> dict:
+    """Live Muse Arena state: rooms, players, stories, games, leaderboard."""
+    try:
+        data = _get_json(ARENA_API)
+    except Exception:
+        return {"error": "arena unreachable", "rooms": [], "leaderboard": []}
+    lb = data.get("leaderboard", []) or []
+    return {
+        "rooms": data.get("rooms", []),
+        "stories": data.get("stories", []),
+        "trivia": data.get("trivia", []),
+        "boards": data.get("boards", []),
+        "leaderboard_top": lb[:10],
+        "leaderboard_size": len(lb),
+    }
+
+
+def get_arena_live() -> dict:
+    return _cached("arena_live", _fetch_arena_live)

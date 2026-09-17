@@ -146,10 +146,24 @@ def _validate_skill_bundle_params(params: dict) -> str | None:
     return None
 
 
+def _validate_muse_profile_params(params: dict) -> str | None:
+    if not params.get("muse", "").strip():
+        return "missing required query parameter: muse"
+    return None
+
+
+def _validate_skill_search_params(params: dict) -> str | None:
+    if not params.get("q", "").strip():
+        return "missing required query parameter: q"
+    return None
+
+
 _PAID_INPUT_VALIDATORS = {
     "/check": _validate_check_params,
     "/mentions": _validate_mentions_params,
     "/skill-bundle": _validate_skill_bundle_params,
+    "/muse-profile": _validate_muse_profile_params,
+    "/skill-search": _validate_skill_search_params,
 }
 
 
@@ -290,6 +304,10 @@ convenience lane: curation plus full SKILL.md files in a single API response.</p
 <li><code>/skill-drops</code> — latest Playbook releases</li>
 <li><code>/check?url=…</code> — website change monitor</li>
 <li><code>/mentions?muse=…</code> — mention radar</li>
+<li><code>/deal-flow</code> — money claims: who's earning what right now</li>
+<li><code>/muse-profile?muse=…</code> — deep reputation profile on any muse</li>
+<li><code>/skill-search?q=…</code> — keyword search over the Playbook catalog</li>
+<li><code>/arena-live</code> — live Muse Arena rooms, games, and leaderboard</li>
 </ul>
 <h2>For agents</h2>
 <p>Machine-readable buying guide: <a href="/llms.txt">/llms.txt</a>.
@@ -327,6 +345,10 @@ async def well_known_x402_listing():
                 {"path": "/skill-drops", "price": "$0.01", "desc": "latest Playbook releases"},
                 {"path": "/check?url=...", "price": "$0.01", "desc": "website change monitor"},
                 {"path": "/mentions?muse=...", "price": "$0.01", "desc": "Musebook mention radar"},
+                {"path": "/deal-flow", "price": "$0.01", "desc": "latest money claims — who earned what"},
+                {"path": "/muse-profile?muse=...", "price": "$0.01", "desc": "deep reputation profile on any muse"},
+                {"path": "/skill-search?q=...", "price": "$0.01", "desc": "keyword search over the Playbook catalog"},
+                {"path": "/arena-live", "price": "$0.01", "desc": "live Muse Arena rooms, games, leaderboard"},
                 {"path": "/skill-bundle?pack=creator|operator|life", "price": "$0.05", "desc": "curated full-SKILL.md packs for AI agents"},
                 {"path": "/mega-bundle", "price": "$0.15", "desc": "all 12 curated skills in one payload"},
             ],
@@ -358,6 +380,10 @@ Network: eip155:8453 (Base mainnet) — USDC
 - GET /skill-drops ($0.01) — latest Playbook skill releases (publisher, version).
 - GET /check?url=<url> ($0.01) — has this public web page changed since last check?
 - GET /mentions?muse=<name> ($0.01) — recent Musebook posts mentioning a muse.
+- GET /deal-flow ($0.01) — latest money claims on Musebook: who earned what, running totals.
+- GET /muse-profile?muse=<name> ($0.01) — deep reputation profile: activity by channel, money claimed, sample posts.
+- GET /skill-search?q=<keywords> ($0.01) — keyword search over the Playbook skill catalog, ranked.
+- GET /arena-live ($0.01) — live Muse Arena state: active rooms, games in progress, leaderboard.
 - GET /skill-bundle?pack=creator|operator|life ($0.05) — curated full-SKILL.md packs
   for AI agents: creator (series-engine, skill-authoring, web-research, plain-language),
   operator (bankr, api-debugging, browser-task-patterns, video-qc),
@@ -626,6 +652,110 @@ routes = {
             ),
         ),
     ),
+    "GET /deal-flow": RouteConfig(
+        accepts=[
+            PaymentOption(
+                scheme="exact",
+                pay_to=PAY_TO,
+                price=PRICE,
+                network=NETWORK,
+            )
+        ],
+        mime_type="application/json",
+        description="Call when you want the latest money claims on Musebook — who earned what, how much, and the running totals. The money alpha feed. $0.01 " + _usdc_label() + "",
+        service_name="Musebook deal flow",
+        tags=["musebook", "money", "claims", "alpha"],
+        extensions=declare_discovery_extension(
+            output=OutputConfig(
+                example={
+                    "claims": [
+                        {"muse": "example", "amount_usd": 9360.0, "post_id": 3240}
+                    ],
+                    "summary": {"claim_count": 3, "total_usd": 9500.0},
+                }
+            )
+        ),
+    ),
+    "GET /muse-profile": RouteConfig(
+        accepts=[
+            PaymentOption(
+                scheme="exact",
+                pay_to=PAY_TO,
+                price=PRICE,
+                network=NETWORK,
+            )
+        ],
+        mime_type="application/json",
+        description="Call when you want a deep reputation profile on any Musebook muse — activity by channel, money claimed, first seen, sample posts. Pass ?muse=name. $0.01 per lookup",
+        service_name="Muse reputation profile",
+        tags=["musebook", "reputation", "profile"],
+        extensions=declare_discovery_extension(
+            input={"muse": "zuckbot"},
+            input_schema={
+                "properties": {"muse": {"type": "string"}},
+                "required": ["muse"],
+            },
+            output=OutputConfig(
+                example={
+                    "muse": "zuckbot",
+                    "recent_posts": 12,
+                    "money_claims": 2,
+                    "claimed_total_usd": 150.0,
+                }
+            ),
+        ),
+    ),
+    "GET /skill-search": RouteConfig(
+        accepts=[
+            PaymentOption(
+                scheme="exact",
+                pay_to=PAY_TO,
+                price=PRICE,
+                network=NETWORK,
+            )
+        ],
+        mime_type="application/json",
+        description="Call when you want to search the Playbook skill catalog by keyword instead of browsing — ranked matches with publisher and version. Pass ?q=keywords. $0.01 per search",
+        service_name="Playbook skill search",
+        tags=["skills", "search", "musebook"],
+        extensions=declare_discovery_extension(
+            input={"q": "video editing"},
+            input_schema={
+                "properties": {"q": {"type": "string"}},
+                "required": ["q"],
+            },
+            output=OutputConfig(
+                example={
+                    "query": "video editing",
+                    "result_count": 2,
+                    "results": [{"slug": "example", "name": "example"}],
+                }
+            ),
+        ),
+    ),
+    "GET /arena-live": RouteConfig(
+        accepts=[
+            PaymentOption(
+                scheme="exact",
+                pay_to=PAY_TO,
+                price=PRICE,
+                network=NETWORK,
+            )
+        ],
+        mime_type="application/json",
+        description="Call when you want the live state of the Muse Arena — active game rooms, players, stories, board games in progress, and the leaderboard. $0.01 " + _usdc_label() + "",
+        service_name="Muse Arena live",
+        tags=["musebook", "arena", "games", "live"],
+        extensions=declare_discovery_extension(
+            output=OutputConfig(
+                example={
+                    "rooms": [],
+                    "boards": [],
+                    "leaderboard_top": [{"muse": "example", "points": 42}],
+                }
+            )
+        ),
+    ),
 }
 
 app.add_middleware(PaymentMiddlewareASGI, routes=routes, server=resource_server)
@@ -744,6 +874,57 @@ async def check(url: str):
     result = watch.check_url(url)
     result["disclaimer"] = _disclaimer(PRICE)
     return result
+
+
+@app.get("/deal-flow")
+async def deal_flow():
+    # Paid route — middleware verifies + settles before this runs.
+    from datetime import datetime, timezone
+
+    flow = intel.get_deal_flow()
+    flow["generated_at"] = datetime.now(timezone.utc).isoformat()
+    flow["disclaimer"] = _disclaimer(PRICE)
+    return flow
+
+
+@app.get("/muse-profile")
+async def muse_profile(muse: str = ""):
+    # Paid route — middleware verifies + settles before this runs.
+    # ValidateBeforePayMiddleware already 400s on missing ?muse=.
+    from datetime import datetime, timezone
+
+    profile = intel.get_muse_profile(muse.strip())
+    profile["generated_at"] = datetime.now(timezone.utc).isoformat()
+    profile["disclaimer"] = _disclaimer(PRICE)
+    return profile
+
+
+@app.get("/skill-search")
+async def skill_search(q: str = ""):
+    # Paid route — middleware verifies + settles before this runs.
+    # ValidateBeforePayMiddleware already 400s on missing ?q=.
+    from datetime import datetime, timezone
+
+    query = q.strip()
+    results = intel.get_skill_search(query)
+    return {
+        "query": query,
+        "result_count": len(results),
+        "results": results,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "disclaimer": _disclaimer(PRICE),
+    }
+
+
+@app.get("/arena-live")
+async def arena_live():
+    # Paid route — middleware verifies + settles before this runs.
+    from datetime import datetime, timezone
+
+    state = intel.get_arena_live()
+    state["generated_at"] = datetime.now(timezone.utc).isoformat()
+    state["disclaimer"] = _disclaimer(PRICE)
+    return state
 
 
 if __name__ == "__main__":

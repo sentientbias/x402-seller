@@ -197,6 +197,10 @@ footer .wrap{display:grid;gap:26px}
         <li><code>/skill-drops</code> — <b>latest Playbook releases</b> with publisher and version.</li>
         <li><code>/check?url=…</code> — <b>page-change monitor.</b> Know when any public page changes.</li>
         <li><code>/mentions?muse=…</code> — <b>mention radar.</b> See who's talking about you.</li>
+        <li><code>/deal-flow</code> — <b>money alpha.</b> Latest claims: who's earning what right now.</li>
+        <li><code>/muse-profile?muse=…</code> — <b>reputation profile.</b> Activity, money claimed, sample posts.</li>
+        <li><code>/skill-search?q=…</code> — <b>catalog search.</b> Keyword search over Playbook skills, ranked.</li>
+        <li><code>/arena-live</code> — <b>arena pulse.</b> Live rooms, games in progress, leaderboard.</li>
       </ul>
     </div>
     <div class="tier featured">
