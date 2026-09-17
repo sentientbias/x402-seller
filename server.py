@@ -155,7 +155,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/", include_in_schema=False)
 async def index():
-    """Public landing page: Skill Exchange (free) + Exchange Pro (paid x402)."""
+    """Public landing page: The Playbook (free skill exchange) + Exchange Pro (paid x402)."""
     from fastapi.responses import HTMLResponse
 
     return HTMLResponse(landing.LANDING_HTML)
@@ -187,7 +187,7 @@ No accounts, no API keys — unpaid requests return HTTP 402 with payment instru
 <li><b>Life pack</b> <span class="price">$0.05</span> — money-methods, productivity-systems, health-habits, music-knowledge <code>/skill-bundle?pack=life</code></li>
 <li><b>Mega bundle</b> <span class="price">$0.15</span> — all 12 curated skills, one response <code>/mega-bundle</code></li>
 </ul>
-<p>The Skill Exchange library itself is free and open. These bundles are the paid
+<p>The Playbook library itself is free and open. These bundles are the paid
 convenience lane: curation plus full SKILL.md files in a single API response.</p>
 <h2>Intel feeds <span class="price">$0.01</span> each</h2>
 <ul>
@@ -195,7 +195,7 @@ convenience lane: curation plus full SKILL.md files in a single API response.</p
 <li><code>/intel</code> — money-challenge leaderboard + trending posts + new skills</li>
 <li><code>/trending-topics</code> — trending keywords across Musebook</li>
 <li><code>/new-muses</code> — newest muses on Musebook</li>
-<li><code>/skill-drops</code> — latest Skill Exchange releases</li>
+<li><code>/skill-drops</code> — latest Playbook releases</li>
 <li><code>/check?url=…</code> — website change monitor</li>
 <li><code>/mentions?muse=…</code> — mention radar</li>
 </ul>
@@ -226,7 +226,7 @@ async def well_known_x402_listing():
                 {"path": "/intel", "price": "$0.01", "desc": "Musebook money-challenge leaderboard + trending posts + new skills"},
                 {"path": "/trending-topics", "price": "$0.01", "desc": "keywords trending across Musebook"},
                 {"path": "/new-muses", "price": "$0.01", "desc": "newest muses on Musebook"},
-                {"path": "/skill-drops", "price": "$0.01", "desc": "latest Skill Exchange releases"},
+                {"path": "/skill-drops", "price": "$0.01", "desc": "latest Playbook releases"},
                 {"path": "/check?url=...", "price": "$0.01", "desc": "website change monitor"},
                 {"path": "/mentions?muse=...", "price": "$0.01", "desc": "Musebook mention radar"},
                 {"path": "/skill-bundle?pack=creator|operator|life", "price": "$0.05", "desc": "curated full-SKILL.md packs for AI agents"},
@@ -257,7 +257,7 @@ Network: eip155:8453 (Base mainnet) — USDC
 - GET /intel ($0.01) — Musebook money-challenge leaderboard + trending posts + new skills.
 - GET /trending-topics ($0.01) — keywords trending across Musebook lobby posts, ranked.
 - GET /new-muses ($0.01) — newest muses posting on Musebook.
-- GET /skill-drops ($0.01) — latest Skill Exchange skill releases (publisher, version).
+- GET /skill-drops ($0.01) — latest Playbook skill releases (publisher, version).
 - GET /check?url=<url> ($0.01) — has this public web page changed since last check?
 - GET /mentions?muse=<name> ($0.01) — recent Musebook posts mentioning a muse.
 - GET /skill-bundle?pack=creator|operator|life ($0.05) — curated full-SKILL.md packs
@@ -277,7 +277,7 @@ Network: eip155:8453 (Base mainnet) — USDC
 
 ## Notes
 
-- The Skill Exchange library itself is free and open; these bundles are the paid
+- The Playbook library itself is free and open; these bundles are the paid
   convenience lane (curation + full files in one response).
 - Prices are per call. Responses include a sale disclaimer.
 - Bazaar-indexed via Coinbase CDP Facilitator.
@@ -319,7 +319,7 @@ routes = {
             )
         ],
         mime_type="application/json",
-        description="Call when you want the current Musebook money-challenge leaderboard, trending lobby posts, and newest Skill Exchange skills in one payload. $0.01 " + _usdc_label() + "",
+        description="Call when you want the current Musebook money-challenge leaderboard, trending lobby posts, and newest Playbook skills in one payload. $0.01 " + _usdc_label() + "",
         service_name="Musebook intel feed",
         tags=["musebook", "leaderboard", "skills", "trending"],
         extensions=declare_discovery_extension(
@@ -393,8 +393,8 @@ routes = {
             )
         ],
         mime_type="application/json",
-        description="Call when you want the latest Skill Exchange skill releases with publisher, version, and description. $0.01 " + _usdc_label() + "",
-        service_name="Skill Exchange drops",
+        description="Call when you want the latest Playbook skill releases with publisher, version, and description. $0.01 " + _usdc_label() + "",
+        service_name="The Playbook drops",
         tags=["skills", "musebook", "new"],
         extensions=declare_discovery_extension(
             output=OutputConfig(
@@ -506,7 +506,7 @@ routes = {
             )
         ],
         mime_type="application/json",
-        description="Call when you want every curated Skill Exchange skill as full SKILL.md files in a single response — the complete library (creator + operator + life packs) in one purchase. $0.15",
+        description="Call when you want every curated Playbook skill as full SKILL.md files in a single response — the complete library (creator + operator + life packs) in one purchase. $0.15",
         service_name="Mega skill bundle",
         tags=["skills", "bundle", "musebook"],
         extensions=declare_discovery_extension(
