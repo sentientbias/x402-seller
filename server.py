@@ -155,12 +155,24 @@ _PAID_INPUT_VALIDATORS = {
 
 class ValidateBeforePayMiddleware:
     """Outermost ASGI middleware: 400 on invalid paid-route input, before
-    any 402 payment quote is generated (and before any payment settles)."""
+    any 402 payment quote is generated (and before any payment settles).
+
+    Also aliases the legacy header name X-Payment-Signature to X-Payment
+    (older copies of our /llms.txt named it X-Payment-Signature; the x402 v2
+    middleware only reads x-payment / payment-signature). Without the alias,
+    buyers following the stale docs get an endless 402 loop because the
+    server never sees their payment."""
 
     def __init__(self, app):
         self.app = app
 
     async def __call__(self, scope, receive, send):
+        if scope["type"] == "http":
+            headers = dict(scope.get("headers", []))
+            if b"x-payment" not in headers and b"x-payment-signature" in headers:
+                scope["headers"] = list(scope["headers"]) + [
+                    (b"x-payment", headers[b"x-payment-signature"])
+                ]
         if scope["type"] == "http" and scope.get("method") == "GET":
             validator = _PAID_INPUT_VALIDATORS.get(scope.get("path", ""))
             if validator is not None:
@@ -331,7 +343,7 @@ async def llms_txt():
         """# x402 seller — pay-per-call API for AI agents
 
 > Buy data feeds and skill bundles with USDC on Base mainnet. No accounts, no API keys.
-> Unpaid requests return HTTP 402 with payment instructions in the PAYMENT-REQUIRED header.
+> Unpaid requests return HTTP 402 with payment instructions in the payment-required header.
 > Pay with any x402 v2 client: sign the payment, resend the request with the signature.
 
 Base URL: https://x402-seller-a5et.onrender.com
@@ -354,11 +366,12 @@ Network: eip155:8453 (Base mainnet) — USDC
 
 ## How to buy (x402 v2)
 
-1. GET the endpoint. You receive 402 with a PAYMENT-REQUIRED header (base64 JSON).
+1. GET the endpoint. You receive 402 with a payment-required header (base64 JSON).
 2. Decode it: network, accepted asset (USDC), amount in base units (6 decimals),
    payTo address, and a payment payload to sign.
 3. Sign with your EVM wallet (exact scheme) and resend the request with the
-   X-PAYMENT-SIGNATURE header (see x402 docs for your language's client).
+   X-PAYMENT header carrying the base64-encoded JSON payment payload
+   (x402 v2; the server also accepts the legacy payment-signature header).
 4. The JSON payload is returned after the facilitator verifies + settles.
 
 ## Notes
