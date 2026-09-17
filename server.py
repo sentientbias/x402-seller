@@ -22,7 +22,10 @@ import os
 os.environ["no_proxy"] = os.environ["NO_PROXY"] = "localhost,127.0.0.1"
 # ---------------------------------------------------------------------------
 
-from fastapi import FastAPI
+from urllib.parse import parse_qsl, urlparse
+
+from fastapi import FastAPI, Response
+from fastapi.responses import JSONResponse
 from x402.http import FacilitatorConfig, HTTPFacilitatorClient, PaymentOption
 from x402.http.middleware.fastapi import PaymentMiddlewareASGI
 from x402.http.types import RouteConfig
@@ -100,6 +103,77 @@ class ProPassMiddleware:
         await self.app(scope, receive, send)
 import landing
 
+# --- Validate-before-pay -----------------------------------------------------
+# The x402 payment middleware 402s (emits a payment quote) before the request
+# ever reaches the FastAPI router, so invalid or missing query input on paid
+# routes used to get a payment quote instead of a 4xx. This outermost ASGI
+# middleware validates the inputs of the input-bearing paid routes FIRST and
+# returns 400 on bad input; only valid requests flow through to the normal
+# pro-pass / payment flow. Added last so it wraps the payment middleware.
+
+
+def _validate_check_params(params: dict) -> str | None:
+    url = params.get("url", "").strip()
+    if not url:
+        return "missing required query parameter: url"
+    try:
+        parts = urlparse(url)
+    except Exception:
+        return "unparseable URL in 'url' parameter"
+    if parts.scheme not in ("http", "https"):
+        return "only http(s) URLs are supported in 'url' parameter"
+    if not parts.hostname:
+        return "URL has no hostname in 'url' parameter"
+    return None
+
+
+def _validate_mentions_params(params: dict) -> str | None:
+    if not params.get("muse", "").strip():
+        return "missing required query parameter: muse"
+    return None
+
+
+def _validate_skill_bundle_params(params: dict) -> str | None:
+    raw = params.get("pack", "")
+    pack = raw.strip().lower()
+    if not pack:
+        return "missing required query parameter: pack"
+    if pack not in intel.BUNDLES:
+        return (
+            f"unknown pack '{raw.strip()}'; "
+            f"expected one of: {', '.join(sorted(intel.BUNDLES))}"
+        )
+    return None
+
+
+_PAID_INPUT_VALIDATORS = {
+    "/check": _validate_check_params,
+    "/mentions": _validate_mentions_params,
+    "/skill-bundle": _validate_skill_bundle_params,
+}
+
+
+class ValidateBeforePayMiddleware:
+    """Outermost ASGI middleware: 400 on invalid paid-route input, before
+    any 402 payment quote is generated (and before any payment settles)."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http" and scope.get("method") == "GET":
+            validator = _PAID_INPUT_VALIDATORS.get(scope.get("path", ""))
+            if validator is not None:
+                query = scope.get("query_string", b"").decode("latin-1")
+                params = dict(parse_qsl(query, keep_blank_values=True))
+                error = validator(params)
+                if error:
+                    response = JSONResponse({"detail": error}, status_code=400)
+                    await response(scope, receive, send)
+                    return
+        await self.app(scope, receive, send)
+
+
 # Base Sepolia (testnet). Mainnet Base is eip155:8453.
 NETWORK = os.environ.get("X402_NETWORK", "eip155:84532")
 FACILITATOR_URL = os.environ.get(
@@ -161,6 +235,12 @@ async def index():
     return HTMLResponse(landing.LANDING_HTML)
 
 
+@app.head("/", include_in_schema=False)
+async def index_head():
+    """HEAD support for uptime monitors / link checkers (no body)."""
+    return Response(status_code=200)
+
+
 @app.get("/health")
 async def health():
     return {"ok": True, "network": NETWORK, "facilitator": FACILITATOR_URL}
@@ -204,6 +284,12 @@ convenience lane: curation plus full SKILL.md files in a single API response.</p
 Full API: <a href="https://github.com/sentientbias/x402-seller">github.com/sentientbias/x402-seller</a>.</p>
 </body></html>"""
     )
+
+
+@app.head("/docs", include_in_schema=False)
+async def docs_head():
+    """HEAD support for uptime monitors / link checkers (no body)."""
+    return Response(status_code=200)
 
 
 @app.get("/.well-known/x402-listing", include_in_schema=False)
@@ -283,6 +369,12 @@ Network: eip155:8453 (Base mainnet) — USDC
 - Bazaar-indexed via Coinbase CDP Facilitator.
 """
     )
+
+
+@app.head("/llms.txt", include_in_schema=False)
+async def llms_txt_head():
+    """HEAD support for uptime monitors / link checkers (no body)."""
+    return Response(status_code=200)
 
 
 facilitator = HTTPFacilitatorClient(_facilitator_config())
@@ -526,6 +618,9 @@ routes = {
 app.add_middleware(PaymentMiddlewareASGI, routes=routes, server=resource_server)
 # Pro-pass bypass must wrap the payment middleware (last added = outermost).
 app.add_middleware(ProPassMiddleware, router=app.router)
+# Input validation must run before the payment middleware so bad input gets a
+# 400 instead of a 402 payment quote (last added = outermost).
+app.add_middleware(ValidateBeforePayMiddleware)
 
 
 @app.get("/report")
