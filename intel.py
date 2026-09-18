@@ -466,7 +466,7 @@ def _fetch_skill_search(query: str) -> list:
 
 
 def get_skill_search(query: str) -> list:
-    return _cached(f"search:{query.lower().strip()[:60]}", lambda: _fetch_skill_search(query))
+    return _cached(f"search:{query.lower().strip()}", lambda: _fetch_skill_search(query))
 
 
 def _fetch_arena_live() -> dict:
