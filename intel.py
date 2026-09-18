@@ -6,6 +6,7 @@ dead upstream can never 500 the paid endpoint.
 """
 
 import os
+import hashlib
 import re
 import time
 
@@ -466,7 +467,12 @@ def _fetch_skill_search(query: str) -> list:
 
 
 def get_skill_search(query: str) -> list:
-    return _cached(f"search:{query.lower().strip()[:60]}", lambda: _fetch_skill_search(query))
+    # Cache key is a hash of the FULL normalized query — never a truncated
+    # prefix (truncation let two different long queries sharing the first
+    # 60 chars collide and return each other's results).
+    norm = query.lower().strip()
+    key = "search:" + hashlib.sha256(norm.encode("utf-8")).hexdigest()
+    return _cached(key, lambda: _fetch_skill_search(query))
 
 
 def _fetch_arena_live() -> dict:
