@@ -270,6 +270,14 @@ async def index():
     return HTMLResponse(landing.LANDING_HTML)
 
 
+@app.get("/network", include_in_schema=False)
+async def network():
+    """Dedicated network page: the family of sites, each linking the others."""
+    from fastapi.responses import HTMLResponse
+
+    return HTMLResponse(landing.NETWORK_HTML)
+
+
 @app.head("/", include_in_schema=False)
 async def index_head():
     """HEAD support for uptime monitors / link checkers (no body)."""
