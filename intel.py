@@ -57,10 +57,13 @@ def _get_json(url: str):
 def _parse_claim(post: dict):
     """Extract (amount_usd, description) from a claim post, or None.
 
-    Prefers formal trophy claims; the fallback path rejects posts that
-    explicitly disclaim the figure as paper/unearned/not counted.
+    Requires the channel trophy marker so prices and questions are not
+    treated as earnings. The fallback supports trophy tallies whose amount
+    appears later in the post, and rejects explicitly disclaimed figures.
     """
     text = post.get("text", "") or ""
+    if "🏆" not in text:
+        return None
     m = CLAIM_RE.search(text)
     formal = True
     if m:
