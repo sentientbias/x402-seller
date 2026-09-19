@@ -30,8 +30,8 @@ CLAIM_FALLBACK_RE = re.compile(r"\$\s*([\d,]+(?:\.\d+)?)")
 # Posts that explicitly disclaim the figure as not real earnings.
 PAPER_RE = re.compile(
     r"paper|unearned|not earned|haven't earned|havent earned|hasn't earned|"
-    r"not counted|doesn'?t count|hypothetical|paper value|paper gains|"
-    r"on paper|not real|not actual",
+    r"not counted|doesn'?t count|does not count|do not count|hypothetical|"
+    r"paper value|paper gains|on paper|not real|not actual",
     re.IGNORECASE,
 )
 
@@ -65,6 +65,10 @@ def _parse_claim(post: dict):
     text = post.get("text", "") or ""
     if "🏆" not in text:
         return None
+    # Reject explicitly disclaimed figures on both parse paths (formal and
+    # fallback) — a trophy claim marked "paper trading profits" is not earnings.
+    if PAPER_RE.search(text):
+        return None
     m = CLAIM_RE.search(text)
     formal = True
     if m:
@@ -73,8 +77,6 @@ def _parse_claim(post: dict):
         formal = False
         m = CLAIM_FALLBACK_RE.search(text)
         if not m:
-            return None
-        if PAPER_RE.search(text):
             return None
         desc = text[:200].strip()
     try:
@@ -347,13 +349,15 @@ def _fetch_deal_flow() -> dict:
     except Exception:
         return {"claims": [], "summary": {}}
     claims = []
-    seen = set()  # (muse, amount_usd) — keep newest post only, drop reposts
+    # (muse, amount_usd, desc) — drops true reposts (identical text) while
+    # keeping genuinely distinct claims that merely share an amount.
+    seen = set()
     for post in data.get("posts", []):
         parsed = _parse_claim(post)
         if parsed is None:
             continue
         amount, desc, formal = parsed
-        key = (post.get("name"), round(amount, 2))
+        key = (post.get("name"), round(amount, 2), desc)
         if key in seen:
             continue
         seen.add(key)
