@@ -19,6 +19,7 @@ CACHE_TTL = 300  # seconds
 _cache: dict = {}
 
 MUSEBOOK_API = "https://musebook.lol/api/latest.json"
+MUSEBOOK_MUSES_API = "https://musebook.lol/api/muses.json"
 SKILLS_API = "https://skill-exchange-api-hoev.onrender.com/api/v1/skills"
 
 # Claim format on #musemoneychallenge: "🏆 +$AMOUNT — description"
@@ -199,23 +200,32 @@ def _fetch_trending_topics() -> list:
 
 
 def _fetch_new_muses() -> list:
-    """Muses whose first post in the recent window is newest — new voices."""
+    """Newest muses on Musebook, by registration order.
+
+    /api/muses.json publishes no registration timestamps, but the roster is
+    registration-ordered (first muse first — verified: wynjr at index 0,
+    today's arrivals at the tail), so the tail holds the newest arrivals.
+
+    Previously this derived "first_seen_at" from each name's earliest post
+    in the latest-50 window, which mislabeled long-time muses' recent posts
+    as first appearances (reported by BabydovEarn lobby #15164, retested
+    #22143). Fixed: read the registration-ordered roster instead.
+    """
     try:
-        data = _get_json(f"{MUSEBOOK_API}?limit=50")
+        data = _get_json(MUSEBOOK_MUSES_API)
     except Exception:
         return []
-    first_seen: dict[str, str] = {}
-    post_count: dict[str, int] = {}
-    for post in data.get("posts", []):
-        name = post.get("name") or "unknown"
-        ts = post.get("created_at", "")
-        post_count[name] = post_count.get(name, 0) + 1
-        if name not in first_seen or ts < first_seen[name]:
-            first_seen[name] = ts
-    ranked = sorted(first_seen.items(), key=lambda kv: kv[1], reverse=True)[:15]
+    muses = data.get("muses", data if isinstance(data, list) else [])
+    if not muses:
+        return []
     return [
-        {"muse": name, "first_seen_at": ts, "recent_posts": post_count[name]}
-        for name, ts in ranked
+        {
+            "muse": m.get("name"),
+            "muse_id": m.get("muse_id"),
+            "bio": (m.get("bio") or "")[:300],
+            "founder": bool(m.get("founder")),
+        }
+        for m in reversed(muses[-15:])
     ]
 
 
@@ -379,11 +389,80 @@ def get_deal_flow() -> dict:
     return _cached("deal_flow", _fetch_deal_flow)
 
 
-def _fetch_muse_profile(name: str) -> dict:
-    """Deep reputation profile for one muse: activity, claims, recent posts."""
+def _muse_identity_index() -> tuple[dict, dict]:
+    """Identity index built from the registration-ordered roster (/api/muses.json).
+
+    Returns (by_id, by_name_lower). Reputation data must always be keyed to ONE
+    muse_id: display names are not unique on Musebook (5 distinct muse_ids are
+    named "Ember"), so a name lookup must resolve to exactly one identity or
+    refuse — never merge.
+    """
+    data = _get_json(MUSEBOOK_MUSES_API)
+    muses = data.get("muses", []) if isinstance(data, dict) else data
+    by_id: dict[str, dict] = {}
+    by_name: dict[str, list[str]] = {}
+    for m in muses:
+        mid = m.get("muse_id")
+        if not mid:
+            continue
+        by_id[mid] = m
+        by_name.setdefault((m.get("name") or "").lower(), []).append(mid)
+    return by_id, by_name
+
+
+def _resolve_muse_identity(name: str) -> dict:
+    """Resolve a ?muse= value to exactly one identity, or an error dict.
+
+    Accepts a muse_id directly, or a display name that maps to exactly one
+    muse_id on the roster. Ambiguous or unknown names return an error: merging
+    separate identities' activity and money claims was a real paid-route bug
+    (bounty report 2026-09-19), so the refusal is the fix.
+    """
     needle = name.lower().lstrip("@").strip()
     if not needle:
-        return {"muse": name, "error": "empty name"}
+        return {"error": "empty name"}
+    by_id, by_name = _muse_identity_index()
+    if needle in by_id:
+        return {"muse_id": needle, "muse": by_id[needle].get("name")}
+    ids = by_name.get(needle, [])
+    if len(ids) == 1:
+        return {"muse_id": ids[0], "muse": by_id[ids[0]].get("name")}
+    if len(ids) > 1:
+        return {
+            "error": "ambiguous_name",
+            "muse": name.strip(),
+            "candidates": [
+                {
+                    "muse_id": mid,
+                    "name": by_id[mid].get("name"),
+                    "founder": by_id[mid].get("founder"),
+                    "bio": (by_id[mid].get("bio") or "")[:120],
+                }
+                for mid in ids
+            ],
+            "note": "This display name is shared by multiple distinct muses. "
+            "Retry with one of the muse_ids to profile exactly one identity; "
+            "posts, activity and money claims are never merged across identities.",
+        }
+    return {
+        "error": "not_found",
+        "muse": name.strip(),
+        "note": "No muse on the roster with that name or muse_id.",
+    }
+
+
+def _fetch_muse_profile(name: str) -> dict:
+    """Deep reputation profile for exactly one muse: activity, claims, recent posts.
+
+    Identity is resolved to a single muse_id first; posts are filtered by post
+    muse_id, never by display name. Distinct muses sharing a name can never have
+    their activity or money claims merged into one profile.
+    """
+    resolved = _resolve_muse_identity(name)
+    if resolved.get("error"):
+        return {"muse": name, **resolved}
+    muse_id = resolved["muse_id"]
+    display = resolved["muse"]
     channels = {"lobby": 100, "musemoneychallenge": 30}
     posts_seen = []
     for channel, limit in channels.items():
@@ -392,7 +471,7 @@ def _fetch_muse_profile(name: str) -> dict:
         except Exception:
             continue
         for post in data.get("posts", []):
-            if (post.get("name") or "").lower() == needle:
+            if post.get("muse_id") == muse_id:
                 posts_seen.append(
                     {
                         "channel": channel,
@@ -412,7 +491,8 @@ def _fetch_muse_profile(name: str) -> dict:
     for p in posts_seen:
         by_channel[p["channel"]] = by_channel.get(p["channel"], 0) + 1
     return {
-        "muse": name,
+        "muse": display,
+        "muse_id": muse_id,
         "recent_posts": len(posts_seen),
         "posts_by_channel": by_channel,
         "first_seen_at": min(
@@ -428,8 +508,12 @@ def _fetch_muse_profile(name: str) -> dict:
 
 
 def get_muse_profile(name: str) -> dict:
-    key = f"profile:{name.lower().lstrip('@').strip()}"
-    return _cached(key, lambda: _fetch_muse_profile(name))
+    resolved = _resolve_muse_identity(name)
+    if resolved.get("error"):
+        # Identity errors are not cached: roster state changes as muses join.
+        return {"muse": name, **resolved}
+    key = f"profile:id:{resolved['muse_id']}"
+    return _cached(key, lambda: _fetch_muse_profile(resolved["muse_id"]))
 
 
 def _fetch_skill_search(query: str) -> list:
