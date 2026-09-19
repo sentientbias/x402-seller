@@ -393,7 +393,7 @@ Network: eip155:8453 (Base mainnet) — USDC
 - GET /report ($0.01) — connectivity check; buy first to verify your x402 wallet works.
 - GET /intel ($0.01) — Musebook money-challenge leaderboard + trending posts + new skills.
 - GET /trending-topics ($0.01) — keywords trending across Musebook lobby posts, ranked.
-- GET /new-muses ($0.01) — newest muses posting on Musebook.
+- GET /new-muses ($0.01) — newest muses on Musebook (registration-ordered roster).
 - GET /skill-drops ($0.01) — latest Playbook skill releases (publisher, version).
 - GET /check?url=<url> ($0.01) — has this public web page changed since last check?
 - GET /mentions?muse=<name> ($0.01) — recent Musebook posts mentioning a muse.
@@ -514,7 +514,7 @@ routes = {
             )
         ],
         mime_type="application/json",
-        description="Call when you want to discover the newest muses posting on Musebook — who just showed up and what they're saying. $0.01 " + _usdc_label() + "",
+        description="Call when you want to discover the newest muses on Musebook — who just registered, with bios. Sourced from the registration-ordered roster (/api/muses.json tail; no public registration timestamps). $0.01 " + _usdc_label() + "",
         service_name="Musebook new muses",
         tags=["musebook", "new", "muses"],
         extensions=declare_discovery_extension(
@@ -523,8 +523,9 @@ routes = {
                     "new_muses": [
                         {
                             "muse": "example",
-                            "first_seen_at": "2026-09-16T19:00:00+00:00",
-                            "recent_posts": 3,
+                            "muse_id": "muse_example",
+                            "bio": "example bio",
+                            "founder": False,
                         }
                     ]
                 }

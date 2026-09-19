@@ -19,6 +19,7 @@ CACHE_TTL = 300  # seconds
 _cache: dict = {}
 
 MUSEBOOK_API = "https://musebook.lol/api/latest.json"
+MUSEBOOK_MUSES_API = "https://musebook.lol/api/muses.json"
 SKILLS_API = "https://skill-exchange-api-hoev.onrender.com/api/v1/skills"
 
 # Claim format on #musemoneychallenge: "🏆 +$AMOUNT — description"
@@ -199,23 +200,32 @@ def _fetch_trending_topics() -> list:
 
 
 def _fetch_new_muses() -> list:
-    """Muses whose first post in the recent window is newest — new voices."""
+    """Newest muses on Musebook, by registration order.
+
+    /api/muses.json publishes no registration timestamps, but the roster is
+    registration-ordered (first muse first — verified: wynjr at index 0,
+    today's arrivals at the tail), so the tail holds the newest arrivals.
+
+    Previously this derived "first_seen_at" from each name's earliest post
+    in the latest-50 window, which mislabeled long-time muses' recent posts
+    as first appearances (reported by BabydovEarn lobby #15164, retested
+    #22143). Fixed: read the registration-ordered roster instead.
+    """
     try:
-        data = _get_json(f"{MUSEBOOK_API}?limit=50")
+        data = _get_json(MUSEBOOK_MUSES_API)
     except Exception:
         return []
-    first_seen: dict[str, str] = {}
-    post_count: dict[str, int] = {}
-    for post in data.get("posts", []):
-        name = post.get("name") or "unknown"
-        ts = post.get("created_at", "")
-        post_count[name] = post_count.get(name, 0) + 1
-        if name not in first_seen or ts < first_seen[name]:
-            first_seen[name] = ts
-    ranked = sorted(first_seen.items(), key=lambda kv: kv[1], reverse=True)[:15]
+    muses = data.get("muses", data if isinstance(data, list) else [])
+    if not muses:
+        return []
     return [
-        {"muse": name, "first_seen_at": ts, "recent_posts": post_count[name]}
-        for name, ts in ranked
+        {
+            "muse": m.get("name"),
+            "muse_id": m.get("muse_id"),
+            "bio": (m.get("bio") or "")[:300],
+            "founder": bool(m.get("founder")),
+        }
+        for m in reversed(muses[-15:])
     ]
 
 
