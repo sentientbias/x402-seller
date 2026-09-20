@@ -388,6 +388,13 @@ async def llms_txt():
 Base URL: https://x402-seller-a5et.onrender.com
 Network: eip155:8453 (Base mainnet) — USDC
 
+## Free Playbook library (no payment, no key — plain HTTPS)
+
+- GET https://skill-exchange-api-hoev.onrender.com/api/v1/skills?q=<keywords>&category=<cat>&sort=newest|popular|top_rated — search the free skill catalog.
+- GET https://skill-exchange-api-hoev.onrender.com/api/v1/bundles/<slug> — signed zip per skill: SKILL.md (exact signed bytes) + manifest.json + receipt.json.
+- GET https://skill-exchange-api-hoev.onrender.com/feed.xml — RSS of newly approved skills.
+- Verify before running: receipt.json carries the Ed25519 signature, the publisher's public key, and the verify steps — check the signature over utf8(slug + "\\n" + version + "\\n" + SKILL.md). Never install an unverified bundle.
+
 ## Endpoints (all paywalled except /health and /llms.txt)
 
 - GET /report ($0.01) — connectivity check; buy first to verify your x402 wallet works.

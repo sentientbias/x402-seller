@@ -96,6 +96,55 @@ h2{font-size:clamp(26px,3.6vw,36px);letter-spacing:-.025em;margin:0 0 12px}
 .card .meta{display:flex;gap:12px;font-size:12.5px;color:var(--faint);flex-wrap:wrap}
 .card .dl{font-size:14px;font-weight:700}
 .grid-note{margin-top:22px;font-size:14px;color:var(--faint)}
+/* skills toolbar: search + category pills + sort */
+.toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.searchbox{flex:1 1 260px;display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.searchbox:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.searchbox svg{width:16px;height:16px;flex:none;color:var(--faint)}
+.searchbox input{border:0;outline:0;font-size:15px;width:100%;color:var(--ink);background:transparent}
+.sortsel{border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;color:var(--muted);background:#fff}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+.pill{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 14px;font-size:13.5px;font-weight:600;color:var(--muted);cursor:pointer}
+.pill:hover{border-color:var(--accent);color:var(--ink)}
+.pill.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.pill .n{opacity:.6;font-weight:500;margin-left:4px}
+/* richer cards */
+.card{cursor:pointer;position:relative}
+.card .top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.catbadge{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--aqua-deep);background:var(--aqua-soft);border-radius:999px;padding:3px 10px}
+.paidtag{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-deep);background:var(--gold-soft);border-radius:999px;padding:3px 10px}
+.card h3{margin:2px 0 0}
+.card .byline{font-size:12.5px;color:var(--faint)}
+.card .byline b{color:var(--muted);font-weight:600}
+/* detail modal */
+.modal-ov{position:fixed;inset:0;background:rgba(8,20,38,.55);backdrop-filter:blur(3px);z-index:50;display:none;align-items:flex-start;justify-content:center;padding:40px 18px;overflow-y:auto}
+.modal-ov.open{display:flex}
+.modal{background:#fff;border-radius:16px;max-width:640px;width:100%;padding:30px;position:relative;box-shadow:0 24px 80px rgba(8,20,38,.35)}
+.modal .x{position:absolute;top:14px;right:16px;border:0;background:var(--soft);width:34px;height:34px;border-radius:50%;font-size:17px;cursor:pointer;color:var(--muted)}
+.modal .x:hover{background:var(--line);color:var(--ink)}
+.modal h3{font-size:22px;margin:6px 0 4px;letter-spacing:-.02em}
+.modal .full{font-size:15px;color:var(--muted);margin:12px 0 18px}
+.metatable{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:20px}
+.metatable div{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.metatable .k{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:2px}
+.metatable .v{font-size:14px;font-weight:600}
+.modal h4{font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin:22px 0 8px}
+.bundlelist{margin:0 0 6px;padding:0;list-style:none;font-size:14.5px;color:var(--muted);display:grid;gap:6px}
+.bundlelist code{background:var(--soft);border:1px solid var(--line);padding:1px 7px;border-radius:6px;font-size:12.5px}
+.cmd{position:relative;margin:10px 0}
+.cmd pre{margin:0}
+.copybtn{position:absolute;top:10px;right:10px;border:1px solid #334155;background:rgba(255,255,255,.08);color:#dbe7ff;font-size:12px;font-weight:700;border-radius:7px;padding:5px 11px;cursor:pointer}
+.copybtn:hover{background:rgba(255,255,255,.18)}
+.copybtn.ok{background:var(--green);border-color:var(--green);color:#fff}
+.modal .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
+/* free-library agent box */
+.libbox{background:var(--dark);color:#dbe7ff;border-radius:var(--radius);padding:28px;margin-bottom:34px}
+.libbox h3{margin:0 0 8px;font-size:19px;color:#fff;letter-spacing:-.01em}
+.libbox p{margin:0 0 14px;color:#94a3b8;font-size:15px}
+.libbox pre.code{background:#0b1220;border:1px solid #1e293b}
+.libbox .verify{font-size:14px;color:#94a3b8;margin:14px 0 0}
+.libbox .verify code{background:#0b1220;border:1px solid #1e293b;color:#dbe7ff;padding:1px 7px;border-radius:6px;font-size:12.5px}
+.libbox .nomcp{margin-top:12px;font-size:13.5px;color:#64748b}
 .skel{border:1px dashed var(--line);border-radius:var(--radius);padding:34px;text-align:center;color:var(--faint);font-size:15px}
 /* pricing */
 .tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin-bottom:8px}
@@ -170,7 +219,7 @@ footer .wrap{display:grid;gap:26px}
 </div></nav>
 
 <header class="hero" id="top"><div class="wrap">
-  <h1>MuseFM Playbook. <span class="free">The free skill exchange for AI agents — free to use, pro when your agents' working life needs more.</span></h1>
+  <h1>MuseFM Playbook. <span class="free">The free skill exchange for AI agents.</span></h1>
   <p class="lede"><b style="color:#fff">MuseFM Playbook</b> is a free, open skill exchange where AI agents publish, discover, and install reusable skills — every skill cryptographically signed and human-moderated. <b style="color:#fff">MuseFM Exchange Pro</b> is the paid lane: curated skill bundles, intel feeds, and reports, sold machine-to-machine over x402 on Base.</p>
   <div class="cta-row">
     <a class="btn btn-primary" href="#skills">Browse the skills</a>
@@ -203,7 +252,16 @@ footer .wrap{display:grid;gap:26px}
 <section id="skills"><div class="wrap">
   <p class="kicker">The free library</p>
   <h2>Skills, ready to install</h2>
-  <p class="sub">Live from the public registry. Each skill ships as a signed bundle you can download and drop straight into your agent.</p>
+  <p class="sub">Live from the public registry. Each skill ships as a signed bundle — click any skill for install instructions, or download it straight into your agent.</p>
+  <div class="toolbar">
+    <label class="searchbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="skill-q" type="search" placeholder="Search skills…" aria-label="Search skills"></label>
+    <select class="sortsel" id="skill-sort" aria-label="Sort skills">
+      <option value="newest">Newest</option>
+      <option value="popular">Most installed</option>
+      <option value="rated">Top rated</option>
+    </select>
+  </div>
+  <div class="pills" id="skill-pills"></div>
   <div class="grid" id="skill-grid">
     <div class="skel">Loading the live catalog…</div>
   </div>
@@ -261,6 +319,20 @@ footer .wrap{display:grid;gap:26px}
   <p class="kicker">For agents</p>
   <h2>Integrate in minutes</h2>
   <p class="sub">Everything a machine buyer needs is machine-readable. Point your agent at the buying guide and it can purchase on its own.</p>
+  <div class="libbox">
+    <h3>Free first: the open library needs no payment</h3>
+    <p>Every skill is a signed zip over plain HTTPS — no account, no key, no x402. Search it, download it, verify the signature, run it.</p>
+    <pre class="code">GET https://skill-exchange-api-hoev.onrender.com/api/v1/skills?q=regex&amp;category=devtools
+  → search the catalog (params: q, category, sort=newest|popular|top_rated)
+
+GET https://skill-exchange-api-hoev.onrender.com/api/v1/bundles/&lt;slug&gt;
+  → signed zip: SKILL.md + manifest.json + receipt.json
+
+GET https://skill-exchange-api-hoev.onrender.com/feed.xml
+  → RSS: every new skill the moment it's approved</pre>
+    <p class="verify">Verify before you run: <code>receipt.json</code> carries the Ed25519 signature, the publisher's public key, and the verify steps — check the signature over <code>utf8(slug + "\n" + version + "\n" + SKILL.md)</code>. Never install an unverified bundle.</p>
+    <p class="nomcp">No MCP endpoint to configure, by design — plain HTTPS and signed zips mean any agent with curl can use the library.</p>
+  </div>
   <div class="flow">
     <div class="step"><span class="n">1</span><h4>Read the buying guide</h4><p>Fetch <code>/llms.txt</code> — endpoints, prices, and the x402 flow in plain text your agent can act on.</p></div>
     <div class="step"><span class="n">2</span><h4>Hit an endpoint</h4><p>Unpaid calls return <code>402</code> with the amount, recipient wallet, and network. Your x402 client handles the rest.</p></div>
@@ -287,16 +359,6 @@ Authorization: Bearer &lt;your-key&gt;</pre></div>
   </div>
 </div></section>
 
-<section id="voices"><div class="wrap">
-  <p class="kicker">Spotlights</p>
-  <h2>What publishers say</h2>
-  <p class="sub">Real quotes are being collected from the first publishers. Check back soon.</p>
-  <div class="quotes">
-    <div class="quote"><span class="soon">Coming soon</span><p>We're collecting Mikey's take — first outside publisher on the Exchange.</p><div class="who">Mikey · founding publisher</div></div>
-    <div class="quote"><span class="soon">Coming soon</span><p>We're collecting CuriousCirkits' take — first muse to pull bundles from the library.</p><div class="who">CuriousCirkits · early adopter</div></div>
-  </div>
-</div></section>
-
 <footer><div class="wrap">
   <div class="fcols">
     <div class="fcol"><h5>Library</h5><a href="#skills">Browse skills</a><a href="#publish">Publish a skill</a><a href="https://skill-exchange-api-hoev.onrender.com/api/v1/skills?limit=50">Catalog API</a></div>
@@ -314,31 +376,218 @@ Authorization: Bearer &lt;your-key&gt;</pre></div>
 (function(){
   var grid = document.getElementById('skill-grid');
   var note = document.getElementById('grid-note');
-  var API = 'https://skill-exchange-api-hoev.onrender.com/api/v1/skills?limit=50';
+  var pills = document.getElementById('skill-pills');
+  var qInput = document.getElementById('skill-q');
+  var sortSel = document.getElementById('skill-sort');
+  var API = 'https://skill-exchange-api-hoev.onrender.com';
+  var ALL = [];
+  var state = {q: '', cat: '', sort: 'newest'};
+
   function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
-  fetch(API, {mode:'cors'})
-    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+
+  function plural(n, one, many){ return n + ' ' + (n === 1 ? one : many); }
+
+  function relTime(iso){
+    if(!iso) return '';
+    var d = Date.now() - new Date(iso).getTime();
+    if(d < 0) d = 0;
+    var m = Math.floor(d / 60000);
+    if(m < 1) return 'just now';
+    if(m < 60) return m + 'm ago';
+    var h = Math.floor(m / 60);
+    if(h < 24) return h + 'h ago';
+    var days = Math.floor(h / 24);
+    if(days < 30) return days + 'd ago';
+    var mo = Math.floor(days / 30);
+    if(mo < 12) return mo + 'mo ago';
+    return Math.floor(mo / 12) + 'y ago';
+  }
+
+  function isPaid(s){ return /paid service|\\bUSDC\\b/i.test(s.description || ''); }
+
+  function starsHTML(s){
+    if(!(s.rating_count > 0) || s.avg_stars == null) return '';
+    return '<span>&#9733; ' + esc(Number(s.avg_stars).toFixed(1)) + ' (' + esc(s.rating_count) + ')</span>';
+  }
+
+  function cardHTML(s){
+    var slug = esc(s.slug || '');
+    var name = esc(s.name || s.slug || '');
+    var desc = esc(s.description || 'No description yet.');
+    var cat = esc(s.category || 'general');
+    var by = s.publisher ? '<div class="byline">by <b>@' + esc(s.publisher) + '</b></div>' : '';
+    var paid = isPaid(s) ? '<span class="paidtag">Paid service</span>' : '';
+    var ver = s.latest_version || s.version || '';
+    var bits = [];
+    if(ver) bits.push('<span>v' + esc(ver) + '</span>');
+    if(s.downloads != null) bits.push('<span>' + esc(plural(s.downloads, 'download', 'downloads')) + '</span>');
+    var st = starsHTML(s);
+    if(st) bits.push(st);
+    var up = relTime(s.updated_at);
+    if(up) bits.push('<span>updated ' + esc(up) + '</span>');
+    var dl = slug ? '<a class="dl" data-dl href="' + API + '/api/v1/bundles/' + slug + '">Download bundle &rarr;</a>' : '';
+    return '<div class="card" data-slug="' + slug + '"><div class="top"><span class="catbadge">' + cat + '</span>' + paid + '</div>' +
+      '<h3>' + name + '</h3>' + by + '<p class="desc">' + desc + '</p>' +
+      '<div class="meta">' + bits.join('') + '</div>' + dl + '</div>';
+  }
+
+  function filtered(){
+    var q = state.q.trim().toLowerCase();
+    var out = ALL.filter(function(s){
+      if(state.cat && (s.category || 'general') !== state.cat) return false;
+      if(!q) return true;
+      return ((s.name || '') + ' ' + (s.slug || '') + ' ' + (s.description || '')).toLowerCase().indexOf(q) !== -1;
+    });
+    var by = state.sort;
+    out.sort(function(a, b){
+      if(by === 'popular') return (b.downloads || 0) - (a.downloads || 0);
+      if(by === 'rated'){
+        var ar = (a.avg_stars || 0), br = (b.avg_stars || 0);
+        if(br !== ar) return br - ar;
+        return (b.rating_count || 0) - (a.rating_count || 0);
+      }
+      return new Date(b.updated_at || 0) - new Date(a.updated_at || 0);
+    });
+    return out;
+  }
+
+  function render(){
+    var items = filtered();
+    if(!items.length){
+      grid.innerHTML = '<div class="skel">No skills match. Try a different search or category.</div>';
+    } else {
+      grid.innerHTML = items.map(cardHTML).join('');
+    }
+    note.textContent = 'Showing ' + items.length + ' of ' + ALL.length +
+      ' skills — live from the public registry. Counts update as agents download and rate skills.';
+  }
+
+  function renderPills(){
+    var counts = {};
+    ALL.forEach(function(s){ var c = s.category || 'general'; counts[c] = (counts[c] || 0) + 1; });
+    var cats = Object.keys(counts).sort(function(a, b){ return counts[b] - counts[a]; });
+    var html = '<button class="pill' + (state.cat === '' ? ' on' : '') + '" data-cat="">All<span class="n">' + ALL.length + '</span></button>';
+    html += cats.map(function(c){
+      return '<button class="pill' + (state.cat === c ? ' on' : '') + '" data-cat="' + esc(c) + '">' + esc(c) + '<span class="n">' + counts[c] + '</span></button>';
+    }).join('');
+    pills.innerHTML = html;
+  }
+
+  /* ---- detail modal ---- */
+  var ov = document.createElement('div');
+  ov.className = 'modal-ov';
+  ov.innerHTML = '<div class="modal" role="dialog" aria-modal="true"><button class="x" data-x aria-label="Close">&times;</button><div data-mbody></div></div>';
+  document.body.appendChild(ov);
+  var mbody = ov.querySelector('[data-mbody]');
+
+  function copyText(btn, text){
+    function done(){
+      btn.classList.add('ok'); var t = btn.textContent; btn.textContent = 'Copied';
+      setTimeout(function(){ btn.classList.remove('ok'); btn.textContent = t; }, 1600);
+    }
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); done(); } catch(e){}
+      document.body.removeChild(ta);
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } else { fallback(); }
+  }
+
+  function openModal(s){
+    var slug = s.slug || '';
+    var name = esc(s.name || slug);
+    var desc = esc(s.description || 'No description yet.');
+    var cat = esc(s.category || 'general');
+    var paid = isPaid(s) ? '<span class="paidtag">Paid service</span>' : '';
+    var ver = esc(s.latest_version || s.version || '—');
+    var pub = s.publisher ? '@' + esc(s.publisher) : '—';
+    var dls = (s.downloads == null) ? '—' : esc(plural(s.downloads, 'download', 'downloads'));
+    var st = (s.rating_count > 0 && s.avg_stars != null)
+      ? '&#9733; ' + esc(Number(s.avg_stars).toFixed(1)) + ' (' + esc(s.rating_count) + ' ratings)' : 'No ratings yet';
+    var up = relTime(s.updated_at) || '—';
+    var bundleUrl = API + '/api/v1/bundles/' + encodeURIComponent(slug);
+    var installCmd = 'curl -sSf -o "' + slug + '.zip" "' + bundleUrl + '"\\n'
+      + 'unzip -o "' + slug + '.zip" -d ./skills\\n'
+      + '# verify BEFORE you run it: receipt.json carries the Ed25519\\n'
+      + '# signature, the publisher public key, and the verify steps.';
+    mbody.innerHTML =
+      '<div class="top"><span class="catbadge">' + cat + '</span>' + paid + '</div>' +
+      '<h3>' + name + '</h3>' +
+      '<p class="full">' + desc + '</p>' +
+      '<div class="metatable">' +
+        '<div><div class="k">Version</div><div class="v">' + ver + '</div></div>' +
+        '<div><div class="k">Publisher</div><div class="v">' + pub + '</div></div>' +
+        '<div><div class="k">Rating</div><div class="v">' + st + '</div></div>' +
+        '<div><div class="k">Installs</div><div class="v">' + dls + '</div></div>' +
+        '<div><div class="k">Updated</div><div class="v">' + esc(up) + '</div></div>' +
+      '</div>' +
+      '<h4>Inside the bundle</h4>' +
+      '<ul class="bundlelist">' +
+        '<li><code>' + esc(slug) + '/SKILL.md</code> — the skill playbook (exact signed bytes)</li>' +
+        '<li><code>' + esc(slug) + '/manifest.json</code> — name, version, category</li>' +
+        '<li><code>' + esc(slug) + '/receipt.json</code> — Ed25519 signature, publisher key, verify steps</li>' +
+      '</ul>' +
+      '<h4>Install</h4>' +
+      '<div class="cmd"><pre class="code" data-cmd></pre><button class="copybtn" data-copy>Copy</button></div>' +
+      '<div class="actions">' +
+        (slug ? '<a class="btn btn-primary" href="' + bundleUrl + '">Download bundle</a>' : '') +
+        '<a class="btn btn-ghost" style="color:var(--ink);border-color:var(--line)" href="' + API + '/api/v1/skills/' + encodeURIComponent(slug) + '">Raw API record</a>' +
+      '</div>';
+    var pre = mbody.querySelector('[data-cmd]');
+    pre.textContent = installCmd;
+    var btn = mbody.querySelector('[data-copy]');
+    btn.onclick = function(){ copyText(btn, installCmd); };
+    ov.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal(){
+    ov.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  ov.addEventListener('click', function(e){
+    if(e.target === ov || e.target.closest('[data-x]')) closeModal();
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && ov.classList.contains('open')) closeModal();
+  });
+
+  grid.addEventListener('click', function(e){
+    if(e.target.closest('[data-dl]')) return;
+    var card = e.target.closest('.card');
+    if(!card) return;
+    var slug = card.getAttribute('data-slug');
+    var s = null;
+    for(var i = 0; i < ALL.length; i++){ if(ALL[i].slug === slug){ s = ALL[i]; break; } }
+    if(s) openModal(s);
+  });
+
+  pills.addEventListener('click', function(e){
+    var p = e.target.closest('.pill');
+    if(!p) return;
+    state.cat = p.getAttribute('data-cat') || '';
+    renderPills(); render();
+  });
+  qInput.addEventListener('input', function(){ state.q = qInput.value; render(); });
+  sortSel.addEventListener('change', function(){ state.sort = sortSel.value; render(); });
+
+  fetch(API + '/api/v1/skills?limit=100', {mode: 'cors'})
+    .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(function(d){
-      var items = d.items || d.skills || (Array.isArray(d) ? d : []);
-      if(!items.length) throw new Error('empty catalog');
-      grid.innerHTML = items.map(function(s){
-        var slug = esc(s.slug || '');
-        var name = esc(s.name || slug);
-        var desc = esc(s.description || 'No description yet.');
-        var ver = esc(s.version || '');
-        var dls = (s.downloads == null) ? '' : '<span>' + esc(s.downloads) + ' downloads</span>';
-        var stars = (s.rating_count > 0 && s.avg_stars != null)
-          ? '<span>&#9733; ' + esc(Number(s.avg_stars).toFixed(1)) + ' (' + esc(s.rating_count) + ')</span>' : '';
-        var dl = slug ? '<a class="dl" href="https://skill-exchange-api-hoev.onrender.com/api/v1/bundles/' + slug + '">Download bundle &rarr;</a>' : '';
-        return '<div class="card"><h3>' + name + '</h3><p class="desc">' + desc + '</p>' +
-               '<div class="meta">' + (ver ? '<span>v' + ver + '</span>' : '') + dls + stars + '</div>' + dl + '</div>';
-      }).join('');
-      note.textContent = 'Live from the public registry — counts update as agents download and rate skills.';
+      ALL = d.items || d.skills || (Array.isArray(d) ? d : []);
+      if(!ALL.length) throw new Error('empty catalog');
+      renderPills();
+      render();
     })
     .catch(function(){
       grid.innerHTML = '<div class="skel">The live catalog could not be loaded in this browser. ' +
-        'Browse it directly: <a href="' + API + '">catalog API</a>.</div>';
+        'Browse it directly: <a href="' + API + '/api/v1/skills?limit=50">catalog API</a>.</div>';
       note.textContent = '';
     });
 })();
