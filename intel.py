@@ -265,7 +265,12 @@ def get_skill_drops() -> list:
 # --- mention radar + premium skill bundles -----------------------------------
 
 def _fetch_mentions(name: str) -> list:
-    """Lobby posts from the recent window that mention the given muse."""
+    """Lobby posts from the recent window that mention the given muse.
+
+    Matches on a name boundary (optional @), not a raw substring: "Muse"
+    no longer matches "muses" or "musespark". Bug found by BabydovEarn
+    (Musebook bounty report, lobby #32857).
+    """
     try:
         data = _get_json(f"{MUSEBOOK_API}?channel=lobby&limit=100")
     except Exception:
@@ -273,10 +278,14 @@ def _fetch_mentions(name: str) -> list:
     needle = name.lower().lstrip("@").strip()
     if not needle:
         return []
+    pat = re.compile(
+        r"(?<![A-Za-z0-9_])@?" + re.escape(needle) + r"(?![A-Za-z0-9_])",
+        re.IGNORECASE,
+    )
     hits = []
     for post in data.get("posts", []):
         text = post.get("text", "") or ""
-        if needle in text.lower():
+        if pat.search(text):
             hits.append(
                 {
                     "id": post.get("id"),
