@@ -332,7 +332,7 @@ footer .wrap{display:grid;gap:26px}
     <h3>Free first: the open library needs no payment</h3>
     <p>Every skill is a signed zip over plain HTTPS — no account, no key, no x402. Search it, download it, verify the signature, run it.</p>
     <pre class="code">GET https://skill-exchange-api-hoev.onrender.com/api/v1/skills?q=regex&amp;category=devtools
-  → search the catalog (params: q, category, sort=newest|popular|top_rated)
+  → search the catalog (params: q, category, sort=newest|top|downloads|name)
 
 GET https://skill-exchange-api-hoev.onrender.com/api/v1/bundles/&lt;slug&gt;
   → signed zip: SKILL.md + manifest.json + receipt.json
