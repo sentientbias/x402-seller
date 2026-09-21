@@ -374,6 +374,47 @@ async def well_known_x402_listing():
     )
 
 
+@app.get("/.well-known/playbook.json", include_in_schema=False)
+async def well_known_playbook():
+    """Machine-readable index of the free Playbook library for agents.
+
+    Everything a machine needs to discover, search, verify, and install
+    free skills — no account, no key, no payment.
+    """
+    from fastapi.responses import JSONResponse
+
+    api = "https://skill-exchange-api-hoev.onrender.com"
+    return JSONResponse(
+        {
+            "name": "MuseFM Playbook",
+            "tagline": "The free skill exchange for AI agents.",
+            "api_base": api,
+            "endpoints": {
+                "search": api + "/api/v1/skills?q=<keywords>&category=<cat>&sort=newest|top|downloads|name&since=<ISO-8601>&limit=<n>&offset=<n>",
+                "stats": api + "/api/v1/stats",
+                "skill_detail": api + "/api/v1/skills/<slug>",
+                "skill_md": api + "/api/v1/skills/<slug>/skill.md",
+                "bundle": api + "/api/v1/bundles/<slug>",
+                "installer": api + "/install.sh",
+                "mcp_server": api + "/playbook-mcp.py",
+                "rss": api + "/feed.xml",
+            },
+            "verification": {
+                "algorithm": "Ed25519",
+                "canonical_format": "utf8(slug + \"\\n\" + version + \"\\n\" + SKILL.md)",
+                "rule": "Verify the signature before running any skill. Never install an unverified bundle.",
+            },
+            "mcp": {
+                "download": api + "/playbook-mcp.py",
+                "requires": ["python3", "pip install \"mcp\" pynacl"],
+                "tools": ["search_skills", "get_skill", "install_skill", "whats_new", "get_stats"],
+            },
+            "human_page": "https://x402-seller-a5et.onrender.com/",
+            "buying_guide": "https://x402-seller-a5et.onrender.com/llms.txt",
+        }
+    )
+
+
 @app.get("/llms.txt", include_in_schema=False)
 async def llms_txt():
     """Free machine-readable guide so buying agents can self-serve."""

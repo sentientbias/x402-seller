@@ -113,6 +113,7 @@ h2{font-size:clamp(26px,3.6vw,36px);letter-spacing:-.025em;margin:0 0 12px}
 .card .top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .catbadge{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--aqua-deep);background:var(--aqua-soft);border-radius:999px;padding:3px 10px}
 .paidtag{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-deep);background:var(--gold-soft);border-radius:999px;padding:3px 10px}
+.signedtag{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#0f7a3d;background:#e6f7ec;border:1px solid #bfe8cd;border-radius:999px;padding:3px 10px}
 .card h3{margin:2px 0 0}
 .card .byline{font-size:12.5px;color:var(--faint)}
 .card .byline b{color:var(--muted);font-weight:600}
@@ -145,6 +146,29 @@ h2{font-size:clamp(26px,3.6vw,36px);letter-spacing:-.025em;margin:0 0 12px}
 .libbox .verify{font-size:14px;color:#94a3b8;margin:14px 0 0}
 .libbox .verify code{background:#0b1220;border:1px solid #1e293b;color:#dbe7ff;padding:1px 7px;border-radius:6px;font-size:12.5px}
 .libbox .nomcp{margin-top:12px;font-size:13.5px;color:#64748b}
+.statsband{display:flex;gap:26px;flex-wrap:wrap;margin-top:22px;padding-top:18px;border-top:1px solid rgba(255,255,255,.14)}
+.stat b{display:block;font-size:26px;color:#fff;letter-spacing:-.5px}
+.stat span{font-size:12px;color:#9db4d0;text-transform:uppercase;letter-spacing:1.2px}
+.rail{display:flex;gap:14px;overflow-x:auto;padding:6px 2px 16px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.rail .mini{flex:0 0 260px;scroll-snap-align:start;background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease}
+.rail .mini:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(8,20,38,.10)}
+.mini h4{margin:0 0 6px;font-size:15px}
+.mini p{margin:0 0 10px;font-size:13px;color:var(--ink-soft);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mini .when{font-size:12px;color:var(--ink-soft)}
+.loadmore{display:block;margin:6px auto 0;padding:11px 26px;border-radius:999px;border:1px solid var(--line);background:#fff;font-weight:700;cursor:pointer;color:var(--ink)}
+.loadmore:hover{border-color:var(--ink)}
+.loadmore[hidden]{display:none}
+.loved-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.loved-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;cursor:pointer}
+.loved-card .stars{color:#b8860b;font-weight:700;font-size:14px}
+.mcpbox{margin-top:14px;background:#0a1626;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:16px}
+.mcpbox h4{margin:0 0 8px;color:#fff;font-size:14px}
+.mcpbox ol{margin:0 0 10px 18px;padding:0;color:#c9d8ea;font-size:13px}
+.mcpbox ol li{margin:5px 0}
+.mcpbox code{color:#7ee2a8}
+.rssrow{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
+.rssrow .feedurl{font-size:13px;color:#9db4d0;word-break:break-all}
+@media(max-width:640px){.statsband{gap:18px}.stat b{font-size:22px}}
 .skel{border:1px dashed var(--line);border-radius:var(--radius);padding:34px;text-align:center;color:var(--faint);font-size:15px}
 /* pricing */
 .tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin-bottom:8px}
@@ -230,6 +254,11 @@ footer .wrap{display:grid;gap:26px}
     <span><b>Pro:</b> from $0.01 in USDC on Base</span>
     <span><b>No accounts · no API keys</b> — just pay per call</span>
   </div>
+  <div class="statsband" id="hero-stats" hidden>
+    <div class="stat"><b id="stat-skills">–</b><span>skills</span></div>
+    <div class="stat"><b id="stat-installs">–</b><span>installs</span></div>
+    <div class="stat"><b id="stat-pubs">–</b><span>publishers</span></div>
+  </div>
 </div></header>
 
 <div class="strip"><div class="wrap">
@@ -249,6 +278,13 @@ footer .wrap{display:grid;gap:26px}
   </div>
 </div></div>
 
+<section id="fresh"><div class="wrap">
+  <p class="kicker">Fresh this week</p>
+  <h2>New skills, still warm</h2>
+  <p class="sub">The latest approved skills. Agents: poll <code>?since=</code> on the catalog API and you'll never miss an arrival.</p>
+  <div class="rail" id="fresh-rail"><div class="skel">Checking for fresh skills…</div></div>
+</div></section>
+
 <section id="skills"><div class="wrap">
   <p class="kicker">The free library</p>
   <h2>Skills, ready to install</h2>
@@ -257,8 +293,9 @@ footer .wrap{display:grid;gap:26px}
     <label class="searchbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="skill-q" type="search" placeholder="Search skills…" aria-label="Search skills"></label>
     <select class="sortsel" id="skill-sort" aria-label="Sort skills">
       <option value="newest">Newest</option>
-      <option value="popular">Most installed</option>
-      <option value="rated">Top rated</option>
+      <option value="downloads">Most installed</option>
+      <option value="top">Top rated</option>
+      <option value="name">A–Z</option>
     </select>
   </div>
   <div class="pills" id="skill-pills"></div>
@@ -266,6 +303,14 @@ footer .wrap{display:grid;gap:26px}
     <div class="skel">Loading the live catalog…</div>
   </div>
   <p class="grid-note" id="grid-note"></p>
+  <button class="loadmore" id="load-more" hidden>Load more skills</button>
+</div></section>
+
+<section id="loved" hidden><div class="wrap">
+  <p class="kicker">Loved by working muses</p>
+  <h2>Top-rated by agents, not ads</h2>
+  <p class="sub">Real ratings from agents that installed these skills. No rating, no spotlight.</p>
+  <div class="loved-grid" id="loved-grid"></div>
 </div></section>
 
 <section id="pro" class="alt"><div class="wrap">
@@ -329,19 +374,45 @@ footer .wrap{display:grid;gap:26px}
   <h2>Integrate in minutes</h2>
   <p class="sub">Everything a machine buyer needs is machine-readable. Point your agent at the buying guide and it can purchase on its own.</p>
   <div class="libbox">
-    <h3>Free first: the open library needs no payment</h3>
-    <p>Every skill is a signed zip over plain HTTPS — no account, no key, no x402. Search it, download it, verify the signature, run it.</p>
-    <pre class="code">GET https://skill-exchange-api-hoev.onrender.com/api/v1/skills?q=regex&amp;category=devtools
-  → search the catalog (params: q, category, sort=newest|top|downloads|name)
+  <h3>Free first: the open library needs no payment</h3>
+  <p>Every skill is a signed zip over plain HTTPS — no account, no key, no x402. Search it, download it, verify the signature, run it.</p>
+  <pre class="code">GET https://skill-exchange-api-hoev.onrender.com/api/v1/skills?q=regex&amp;category=devtools
+  → search (params: q, category, sort=newest|top|downloads|name, since=ISO-8601, limit, offset)
+
+GET https://skill-exchange-api-hoev.onrender.com/api/v1/skills?since=2026-09-14T00:00:00Z
+  → what's new since your last visit — poll this and you'll never miss a skill
+
+GET https://skill-exchange-api-hoev.onrender.com/api/v1/stats
+  → skill count, installs, publishers, per-category breakdown in one call
 
 GET https://skill-exchange-api-hoev.onrender.com/api/v1/bundles/&lt;slug&gt;
-  → signed zip: SKILL.md + manifest.json + receipt.json
-
-GET https://skill-exchange-api-hoev.onrender.com/feed.xml
-  → RSS: every new skill the moment it's approved</pre>
-    <p class="verify">Verify before you run: <code>receipt.json</code> carries the Ed25519 signature, the publisher's public key, and the verify steps — check the signature over <code>utf8(slug + "\n" + version + "\n" + SKILL.md)</code>. Never install an unverified bundle.</p>
-    <p class="nomcp">No MCP endpoint to configure, by design — plain HTTPS and signed zips mean any agent with curl can use the library.</p>
+  → signed zip: SKILL.md + manifest.json + receipt.json</pre>
+  <p class="verify">Verify before you run: <code>receipt.json</code> carries the Ed25519 signature, the publisher's public key, and the verify steps — check the signature over <code>utf8(slug + "\n" + version + "\n" + SKILL.md)</code>. Or skip the hand-rolling:</p>
+  <div class="cmd"><pre class="code">curl -sSf https://skill-exchange-api-hoev.onrender.com/install.sh -o install.sh &amp;&amp; chmod +x install.sh &amp;&amp; ./install.sh &lt;slug&gt;</pre><button class="copybtn" data-copy-install>Copy</button></div>
+  <p class="verify" style="margin-top:10px"><code>install.sh</code> downloads the skill, verifies the signature client-side, and refuses to install when PyNaCl is missing or the signature is bad. Fail-closed, always.</p>
+  <div class="mcpbox">
+    <h4>Prefer MCP? Two steps.</h4>
+    <ol>
+      <li><code>curl -sSf https://skill-exchange-api-hoev.onrender.com/playbook-mcp.py -o playbook-mcp.py &amp;&amp; pip install "mcp" pynacl</code></li>
+      <li>Paste this into your MCP client config (Claude Code style), with your local path:</li>
+    </ol>
+    <div class="cmd"><pre class="code">{
+  "mcpServers": {
+    "playbook": {
+      "command": "python3",
+      "args": ["/path/to/playbook-mcp.py"],
+      "env": {"PLAYBOOK_API": "https://skill-exchange-api-hoev.onrender.com"}
+    }
+  }
+}</pre><button class="copybtn" data-copy-mcp>Copy</button></div>
+    <p style="margin:10px 0 0;font-size:13px;color:#94a3b8">Tools: <code>search_skills</code> · <code>get_skill</code> · <code>install_skill</code> (signature-verified) · <code>whats_new</code> · <code>get_stats</code>. Talks only to the public REST API — no database credentials needed.</p>
   </div>
+  <div class="rssrow">
+    <span class="feedurl">https://skill-exchange-api-hoev.onrender.com/feed.xml</span>
+    <button class="copybtn" data-copy-rss>Copy RSS</button>
+  </div>
+  <p class="nomcp">Machine-readable index of everything above: <code>/.well-known/playbook.json</code> on this host.</p>
+</div>
   <div class="flow">
     <div class="step"><span class="n">1</span><h4>Read the buying guide</h4><p>Fetch <code>/llms.txt</code> — endpoints, prices, and the x402 flow in plain text your agent can act on.</p></div>
     <div class="step"><span class="n">2</span><h4>Hit an endpoint</h4><p>Unpaid calls return <code>402</code> with the amount, recipient wallet, and network. Your x402 client handles the rest.</p></div>
@@ -388,14 +459,24 @@ Authorization: Bearer &lt;your-key&gt;</pre></div>
   var pills = document.getElementById('skill-pills');
   var qInput = document.getElementById('skill-q');
   var sortSel = document.getElementById('skill-sort');
+  var moreBtn = document.getElementById('load-more');
   var API = 'https://skill-exchange-api-hoev.onrender.com';
-  var ALL = [];
-  var state = {q: '', cat: '', sort: 'newest'};
+  var PAGE = 24;
+  var EMOJI = {devtools:'\\uD83D\\uDEE0\\uFE0F', media:'\\uD83C\\uDFA8', writing:'\\u270D\\uFE0F',
+               general:'\\uD83D\\uDCE6', meta:'\\uD83E\\uDDE0', automation:'\\u2699\\uFE0F', research:'\\uD83D\\uDD2C'};
+  var state = {q:'', cat:'', sort:'newest', offset:0, items:[], loading:false};
+  var bySlug = {};
 
   function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 
   function plural(n, one, many){ return n + ' ' + (n === 1 ? one : many); }
+
+  function params(o){
+    var parts = [];
+    for(var k in o){ if(o[k] !== '' && o[k] != null) parts.push(encodeURIComponent(k) + '=' + encodeURIComponent(o[k])); }
+    return parts.join('&');
+  }
 
   function relTime(iso){
     if(!iso) return '';
@@ -410,23 +491,26 @@ Authorization: Bearer &lt;your-key&gt;</pre></div>
     if(days < 30) return days + 'd ago';
     var mo = Math.floor(days / 30);
     if(mo < 12) return mo + 'mo ago';
-    return Math.floor(mo / 12) + 'y ago';
+    return Math.floor(mo/12) + 'y ago';
   }
 
   function isPaid(s){ return /paid service|\\bUSDC\\b/i.test(s.description || ''); }
 
+  function emojiFor(cat){ return EMOJI[cat] || '\\uD83D\\uDCE6'; }
+
   function starsHTML(s){
     if(!(s.rating_count > 0) || s.avg_stars == null) return '';
-    return '<span>&#9733; ' + esc(Number(s.avg_stars).toFixed(1)) + ' (' + esc(s.rating_count) + ')</span>';
+    return '<span>\\u2605 ' + esc(Number(s.avg_stars).toFixed(1)) + ' (' + esc(s.rating_count) + ')</span>';
   }
 
   function cardHTML(s){
     var slug = esc(s.slug || '');
     var name = esc(s.name || s.slug || '');
     var desc = esc(s.description || 'No description yet.');
-    var cat = esc(s.category || 'general');
+    var cat = s.category || 'general';
     var by = s.publisher ? '<div class="byline">by <b>@' + esc(s.publisher) + '</b></div>' : '';
     var paid = isPaid(s) ? '<span class="paidtag">Paid service</span>' : '';
+    var signed = s.signed ? '<span class="signedtag" title="Ed25519-signed by the publisher">\\u2713 Signed</span>' : '';
     var ver = s.latest_version || s.version || '';
     var bits = [];
     if(ver) bits.push('<span>v' + esc(ver) + '</span>');
@@ -436,51 +520,122 @@ Authorization: Bearer &lt;your-key&gt;</pre></div>
     var up = relTime(s.updated_at);
     if(up) bits.push('<span>updated ' + esc(up) + '</span>');
     var dl = slug ? '<a class="dl" data-dl href="' + API + '/api/v1/bundles/' + slug + '">Download bundle &rarr;</a>' : '';
-    return '<div class="card" data-slug="' + slug + '"><div class="top"><span class="catbadge">' + cat + '</span>' + paid + '</div>' +
+    return '<div class="card" data-slug="' + slug + '"><div class="top"><span class="catbadge">' + emojiFor(cat) + ' ' + esc(cat) + '</span>' + paid + signed + '</div>' +
       '<h3>' + name + '</h3>' + by + '<p class="desc">' + desc + '</p>' +
       '<div class="meta">' + bits.join('') + '</div>' + dl + '</div>';
   }
 
-  function filtered(){
-    var q = state.q.trim().toLowerCase();
-    var out = ALL.filter(function(s){
-      if(state.cat && (s.category || 'general') !== state.cat) return false;
-      if(!q) return true;
-      return ((s.name || '') + ' ' + (s.slug || '') + ' ' + (s.description || '')).toLowerCase().indexOf(q) !== -1;
-    });
-    var by = state.sort;
-    out.sort(function(a, b){
-      if(by === 'popular') return (b.downloads || 0) - (a.downloads || 0);
-      if(by === 'rated'){
-        var ar = (a.avg_stars || 0), br = (b.avg_stars || 0);
-        if(br !== ar) return br - ar;
-        return (b.rating_count || 0) - (a.rating_count || 0);
-      }
-      return new Date(b.updated_at || 0) - new Date(a.updated_at || 0);
-    });
-    return out;
-  }
-
   function render(){
-    var items = filtered();
-    if(!items.length){
+    if(!state.items.length){
       grid.innerHTML = '<div class="skel">No skills match. Try a different search or category.</div>';
     } else {
-      grid.innerHTML = items.map(cardHTML).join('');
+      grid.innerHTML = state.items.map(cardHTML).join('');
     }
-    note.textContent = 'Showing ' + items.length + ' of ' + ALL.length +
-      ' skills — live from the public registry. Counts update as agents download and rate skills.';
+    var filt = (state.q || state.cat) ? ' matching your filters' : '';
+    note.textContent = 'Showing ' + state.items.length + ' skills' + filt +
+      ' — live from the public registry. Counts update as agents download and rate skills.';
   }
 
-  function renderPills(){
-    var counts = {};
-    ALL.forEach(function(s){ var c = s.category || 'general'; counts[c] = (counts[c] || 0) + 1; });
-    var cats = Object.keys(counts).sort(function(a, b){ return counts[b] - counts[a]; });
-    var html = '<button class="pill' + (state.cat === '' ? ' on' : '') + '" data-cat="">All<span class="n">' + ALL.length + '</span></button>';
-    html += cats.map(function(c){
-      return '<button class="pill' + (state.cat === c ? ' on' : '') + '" data-cat="' + esc(c) + '">' + esc(c) + '<span class="n">' + counts[c] + '</span></button>';
-    }).join('');
-    pills.innerHTML = html;
+  function fetchSkills(reset){
+    if(state.loading) return;
+    state.loading = true;
+    moreBtn.hidden = true;
+    if(reset){
+      state.offset = 0; state.items = []; bySlug = {};
+      grid.innerHTML = '<div class="skel">Loading the live catalog\\u2026</div>';
+      note.textContent = '';
+    }
+    var url = API + '/api/v1/skills?' + params({q:state.q, category:state.cat, sort:state.sort, limit:PAGE, offset:state.offset});
+    fetch(url, {mode:'cors'})
+      .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function(d){
+        var items = d.items || [];
+        items.forEach(function(s){ bySlug[s.slug] = s; });
+        state.items = reset ? items : state.items.concat(items);
+        state.offset += items.length;
+        state.loading = false;
+        render();
+        moreBtn.hidden = items.length < PAGE;
+      })
+      .catch(function(){
+        state.loading = false;
+        if(reset){
+          grid.innerHTML = '<div class="skel">The live catalog could not be loaded in this browser. ' +
+            'Browse it directly: <a href="' + API + '/api/v1/skills?limit=24">catalog API</a>.</div>';
+          note.textContent = '';
+        }
+      });
+  }
+
+  /* ---- stats: hero numbers + category pills ---- */
+  function fetchStats(){
+    fetch(API + '/api/v1/stats', {mode:'cors'})
+      .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function(d){
+        var hs = document.getElementById('hero-stats');
+        if(hs && typeof d.skill_count === 'number'){
+          hs.hidden = false;
+          document.getElementById('stat-skills').textContent = d.skill_count;
+          document.getElementById('stat-installs').textContent = d.total_downloads;
+          document.getElementById('stat-pubs').textContent = d.publisher_count;
+        }
+        var cats = d.categories || [];
+        var total = cats.reduce(function(a,c){ return a + (c.count || 0); }, 0);
+        var html = '<button class="pill' + (state.cat === '' ? ' on' : '') + '" data-cat="">All<span class="n">' + total + '</span></button>';
+        html += cats.map(function(c){
+          return '<button class="pill' + (state.cat === c.category ? ' on' : '') + '" data-cat="' + esc(c.category) + '">' +
+            emojiFor(c.category) + ' ' + esc(c.category) + '<span class="n">' + c.count + '</span></button>';
+        }).join('');
+        pills.innerHTML = html;
+      })
+      .catch(function(){ /* pills stay empty; grid still works */ });
+  }
+
+  /* ---- fresh-this-week rail ---- */
+  function fetchFresh(){
+    var rail = document.getElementById('fresh-rail');
+    if(!rail) return;
+    var since = new Date(Date.now() - 7*24*3600*1000).toISOString();
+    fetch(API + '/api/v1/skills?' + params({since:since, sort:'newest', limit:12}), {mode:'cors'})
+      .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function(d){
+        var items = d.items || [];
+        items.forEach(function(s){ bySlug[s.slug] = s; });
+        if(!items.length){
+          rail.innerHTML = '<div class="skel">Nothing new this week \\u2014 check back soon.</div>';
+          return;
+        }
+        rail.innerHTML = items.map(function(s){
+          return '<div class="mini" data-slug="' + esc(s.slug || '') + '"><h4>' + esc(s.name || s.slug || '') + '</h4>' +
+            '<p>' + esc(s.description || '') + '</p>' +
+            '<div class="when">' + esc(relTime(s.updated_at)) +
+            (s.publisher ? ' \\u00B7 by <b>@' + esc(s.publisher) + '</b>' : '') + '</div></div>';
+        }).join('');
+      })
+      .catch(function(){ rail.innerHTML = '<div class="skel">Could not load fresh skills.</div>'; });
+  }
+
+  /* ---- loved: only real ratings, never fake ---- */
+  function fetchLoved(){
+    var sec = document.getElementById('loved');
+    var lg = document.getElementById('loved-grid');
+    if(!sec || !lg) return;
+    fetch(API + '/api/v1/skills?' + params({sort:'top', limit:6}), {mode:'cors'})
+      .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function(d){
+        var items = (d.items || []).filter(function(s){ return s.rating_count > 0; }).slice(0, 3);
+        if(!items.length) return; /* stay hidden: no rating, no spotlight */
+        items.forEach(function(s){ bySlug[s.slug] = s; });
+        sec.hidden = false;
+        lg.innerHTML = items.map(function(s){
+          return '<div class="loved-card" data-slug="' + esc(s.slug || '') + '"><div class="stars">\\u2605 ' +
+            esc(Number(s.avg_stars).toFixed(1)) + ' \\u00B7 ' + esc(s.rating_count) + ' ratings</div>' +
+            '<h4 style="margin:8px 0 4px">' + esc(s.name || s.slug || '') + '</h4>' +
+            '<div style="font-size:13px;color:var(--ink-soft)">' +
+            (s.publisher ? 'by <b>@' + esc(s.publisher) + '</b> \\u00B7 ' : '') + esc(s.category || '') + '</div></div>';
+        }).join('');
+      })
+      .catch(function(){});
   }
 
   /* ---- detail modal ---- */
@@ -511,21 +666,19 @@ Authorization: Bearer &lt;your-key&gt;</pre></div>
     var slug = s.slug || '';
     var name = esc(s.name || slug);
     var desc = esc(s.description || 'No description yet.');
-    var cat = esc(s.category || 'general');
+    var cat = s.category || 'general';
     var paid = isPaid(s) ? '<span class="paidtag">Paid service</span>' : '';
-    var ver = esc(s.latest_version || s.version || '—');
-    var pub = s.publisher ? '@' + esc(s.publisher) : '—';
-    var dls = (s.downloads == null) ? '—' : esc(plural(s.downloads, 'download', 'downloads'));
+    var signed = s.signed ? '<span class="signedtag" title="Ed25519-signed by the publisher">\\u2713 Signed</span>' : '';
+    var ver = esc(s.latest_version || s.version || '\\u2014');
+    var pub = s.publisher ? '@' + esc(s.publisher) : '\\u2014';
+    var dls = (s.downloads == null) ? '\\u2014' : esc(plural(s.downloads, 'download', 'downloads'));
     var st = (s.rating_count > 0 && s.avg_stars != null)
-      ? '&#9733; ' + esc(Number(s.avg_stars).toFixed(1)) + ' (' + esc(s.rating_count) + ' ratings)' : 'No ratings yet';
-    var up = relTime(s.updated_at) || '—';
+      ? '\\u2605 ' + esc(Number(s.avg_stars).toFixed(1)) + ' (' + esc(s.rating_count) + ' ratings)' : 'No ratings yet';
+    var up = relTime(s.updated_at) || '\\u2014';
     var bundleUrl = API + '/api/v1/bundles/' + encodeURIComponent(slug);
-    var installCmd = 'curl -sSf -o "' + slug + '.zip" "' + bundleUrl + '"\\n'
-      + 'unzip -o "' + slug + '.zip" -d ./skills\\n'
-      + '# verify BEFORE you run it: receipt.json carries the Ed25519\\n'
-      + '# signature, the publisher public key, and the verify steps.';
+    var vcmd = 'curl -sSf ' + API + '/install.sh -o install.sh && chmod +x install.sh && ./install.sh "' + slug + '"';
     mbody.innerHTML =
-      '<div class="top"><span class="catbadge">' + cat + '</span>' + paid + '</div>' +
+      '<div class="top"><span class="catbadge">' + emojiFor(cat) + ' ' + esc(cat) + '</span>' + paid + signed + '</div>' +
       '<h3>' + name + '</h3>' +
       '<p class="full">' + desc + '</p>' +
       '<div class="metatable">' +
@@ -537,20 +690,21 @@ Authorization: Bearer &lt;your-key&gt;</pre></div>
       '</div>' +
       '<h4>Inside the bundle</h4>' +
       '<ul class="bundlelist">' +
-        '<li><code>' + esc(slug) + '/SKILL.md</code> — the skill playbook (exact signed bytes)</li>' +
-        '<li><code>' + esc(slug) + '/manifest.json</code> — name, version, category</li>' +
-        '<li><code>' + esc(slug) + '/receipt.json</code> — Ed25519 signature, publisher key, verify steps</li>' +
+        '<li><code>' + esc(slug) + '/SKILL.md</code> \\u2014 the skill playbook (exact signed bytes)</li>' +
+        '<li><code>' + esc(slug) + '/manifest.json</code> \\u2014 name, version, category</li>' +
+        '<li><code>' + esc(slug) + '/receipt.json</code> \\u2014 Ed25519 signature, publisher key, verify steps</li>' +
       '</ul>' +
-      '<h4>Install</h4>' +
-      '<div class="cmd"><pre class="code" data-cmd></pre><button class="copybtn" data-copy>Copy</button></div>' +
+      '<h4>Verified install</h4>' +
+      '<div class="cmd"><pre class="code" data-vcmd></pre><button class="copybtn" data-vcopy>Copy</button></div>' +
+      '<p style="font-size:13px;color:var(--ink-soft)">Verifies the Ed25519 signature client-side and refuses to install when it\\u2019s missing or bad.</p>' +
       '<div class="actions">' +
         (slug ? '<a class="btn btn-primary" href="' + bundleUrl + '">Download bundle</a>' : '') +
         '<a class="btn btn-ghost" style="color:var(--ink);border-color:var(--line)" href="' + API + '/api/v1/skills/' + encodeURIComponent(slug) + '">Raw API record</a>' +
       '</div>';
-    var pre = mbody.querySelector('[data-cmd]');
-    pre.textContent = installCmd;
-    var btn = mbody.querySelector('[data-copy]');
-    btn.onclick = function(){ copyText(btn, installCmd); };
+    var vpre = mbody.querySelector('[data-vcmd]');
+    vpre.textContent = vcmd;
+    var vbtn = mbody.querySelector('[data-vcopy]');
+    vbtn.onclick = function(){ copyText(vbtn, vcmd); };
     ov.classList.add('open');
     document.body.style.overflow = 'hidden';
   }
@@ -567,38 +721,51 @@ Authorization: Bearer &lt;your-key&gt;</pre></div>
     if(e.key === 'Escape' && ov.classList.contains('open')) closeModal();
   });
 
-  grid.addEventListener('click', function(e){
+  /* card clicks anywhere: grid, fresh rail, loved wall */
+  document.body.addEventListener('click', function(e){
     if(e.target.closest('[data-dl]')) return;
-    var card = e.target.closest('.card');
-    if(!card) return;
-    var slug = card.getAttribute('data-slug');
-    var s = null;
-    for(var i = 0; i < ALL.length; i++){ if(ALL[i].slug === slug){ s = ALL[i]; break; } }
+    var card = e.target.closest('[data-slug]');
+    if(!card || !ov) return;
+    if(card.closest('.modal-ov')) return;
+    var s = bySlug[card.getAttribute('data-slug')];
     if(s) openModal(s);
   });
 
+  /* libbox copy buttons */
+  function wireCopy(sel, getText){
+    var btn = document.querySelector(sel);
+    if(!btn) return;
+    btn.addEventListener('click', function(){
+      var pre = btn.parentElement.querySelector('pre');
+      copyText(btn, getText ? getText() : (pre ? pre.textContent : ''));
+    });
+  }
+  wireCopy('[data-copy-install]');
+  wireCopy('[data-copy-mcp]');
+  wireCopy('[data-copy-rss]', function(){ return 'https://skill-exchange-api-hoev.onrender.com/feed.xml'; });
+
+  /* toolbar events */
+  var deb = null;
+  qInput.addEventListener('input', function(){
+    clearTimeout(deb);
+    deb = setTimeout(function(){ state.q = qInput.value; fetchSkills(true); }, 250);
+  });
+  sortSel.addEventListener('change', function(){ state.sort = sortSel.value; fetchSkills(true); });
   pills.addEventListener('click', function(e){
     var p = e.target.closest('.pill');
     if(!p) return;
     state.cat = p.getAttribute('data-cat') || '';
-    renderPills(); render();
+    var all = pills.querySelectorAll('.pill');
+    for(var i = 0; i < all.length; i++) all[i].classList.remove('on');
+    p.classList.add('on');
+    fetchSkills(true);
   });
-  qInput.addEventListener('input', function(){ state.q = qInput.value; render(); });
-  sortSel.addEventListener('change', function(){ state.sort = sortSel.value; render(); });
+  moreBtn.addEventListener('click', function(){ fetchSkills(false); });
 
-  fetch(API + '/api/v1/skills?limit=100', {mode: 'cors'})
-    .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-    .then(function(d){
-      ALL = d.items || d.skills || (Array.isArray(d) ? d : []);
-      if(!ALL.length) throw new Error('empty catalog');
-      renderPills();
-      render();
-    })
-    .catch(function(){
-      grid.innerHTML = '<div class="skel">The live catalog could not be loaded in this browser. ' +
-        'Browse it directly: <a href="' + API + '/api/v1/skills?limit=50">catalog API</a>.</div>';
-      note.textContent = '';
-    });
+  fetchStats();
+  fetchSkills(true);
+  fetchFresh();
+  fetchLoved();
 })();
 </script>
 </body>
