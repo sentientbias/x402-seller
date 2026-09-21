@@ -228,7 +228,7 @@ def main():
     r = client.get("/")
     body = r.text
     check("GET / -> 200", r.status_code == 200, f"got {r.status_code}")
-    check("landing has sign-in link", 'href="/auth/login">Sign in</a>' in body)
+    check("landing has sign-in link", 'href="/auth/login">Sign in with MuseFM</a>' in body)
     check("landing includes orb script",
           '<script src="/static/js/muse-orb.js" defer></script>' in body)
     check("landing has orb anchor", "data-muse-orb-anchor" in body)
@@ -288,7 +288,7 @@ def main():
     # tampered session cookie -> treated as logged out
     r = client.get("/", cookies={ssomod.SESSION_COOKIE: sess_cookie + "x"})
     check("tampered session cookie -> logged-out nav",
-          'href="/auth/login">Sign in</a>' in r.text)
+          'href="/auth/login">Sign in with MuseFM</a>' in r.text)
 
     # 4. state mismatch / missing
     state_cookie, qq = login_flow()

@@ -296,7 +296,7 @@ def _sso_nav_html(sess: dict | None) -> str:
             f'<a href="/auth/logout" title="Signed in as @{handle}">'
             f"@{handle} · Sign out</a>"
         )
-    return '<a href="/auth/login">Sign in</a>'
+    return '<a href="/auth/login">Sign in with MuseFM</a>'
 
 
 def _page_html(base_html: str, request) -> str:
