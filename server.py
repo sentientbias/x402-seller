@@ -368,6 +368,7 @@ async def well_known_x402_listing():
                 {"path": "/arena-live", "price": "$0.01", "desc": "live Muse Arena rooms, games, leaderboard"},
                 {"path": "/skill-bundle?pack=creator|operator|life", "price": "$0.05", "desc": "curated full-SKILL.md packs for AI agents"},
                 {"path": "/mega-bundle", "price": "$0.15", "desc": "all 12 curated skills in one payload"},
+                {"path": "/agentic-memory-pack", "price": "$12.00", "desc": "Agentic Memory Pro package: SKILL.md + API reference + memcli.py — $12 one-time per agent seat"},
             ],
         }
     )
@@ -413,6 +414,7 @@ Network: eip155:8453 (Base mainnet) — USDC
   operator (bankr, api-debugging, browser-task-patterns, video-qc),
   life (money-methods, productivity-systems, health-habits, music-knowledge).
 - GET /mega-bundle ($0.15) — all 12 curated skills as full SKILL.md files, one purchase.
+- GET /agentic-memory-pack ($12.00) — Agentic Memory Pro: full package (SKILL.md + API reference + memcli.py). $12 one-time per agent seat.
 
 ## How to buy (x402 v2)
 
@@ -677,6 +679,31 @@ routes = {
             ),
         ),
     ),
+    "GET /agentic-memory-pack": RouteConfig(
+        accepts=[
+            PaymentOption(
+                scheme="exact",
+                pay_to=PAY_TO,
+                price="$12.00",
+                network=NETWORK,
+            )
+        ],
+        mime_type="application/json",
+        description="Call when you want the Agentic Memory Pro package: the full SKILL.md, the 6-endpoint API reference, and the working memcli.py client — everything an agent needs for durable cross-task memory. $12.00 one-time per agent seat, USDC on Base.",
+        service_name="Agentic Memory Pro",
+        tags=["memory", "pro", "agent", "skill"],
+        extensions=declare_discovery_extension(
+            input={},
+            input_schema={"properties": {}, "required": []},
+            output=OutputConfig(
+                example={
+                    "product": "agentic-memory",
+                    "price": "$12.00",
+                    "files": ["SKILL.md", "api-reference.md", "memcli.py"],
+                }
+            ),
+        ),
+    ),
     "GET /deal-flow": RouteConfig(
         accepts=[
             PaymentOption(
@@ -890,6 +917,40 @@ async def mega_bundle():
     bundle["generated_at"] = datetime.now(timezone.utc).isoformat()
     bundle["disclaimer"] = _disclaimer("$0.15", premium=True)
     return bundle
+
+
+@app.get("/agentic-memory-pack")
+async def agentic_memory_pack():
+    # Paid route — middleware verifies + settles before this runs.
+    # $12.00 one-time per agent seat. The full Agentic Memory Pro package:
+    # SKILL.md (memory discipline), api-reference.md (6 endpoints),
+    # memcli.py (working CLI). Served from the repo's pro/ directory.
+    from datetime import datetime, timezone
+    from pathlib import Path
+
+    base = Path(__file__).resolve().parent / "pro" / "agentic-memory"
+    files = {}
+    for name in ("SKILL.md", "api-reference.md", "memcli.py"):
+        try:
+            files[name] = (base / name).read_text(encoding="utf-8")
+        except OSError:
+            files[name] = None
+    missing = [n for n, c in files.items() if c is None]
+    if missing:
+        return {"error": "package file missing", "missing": missing}
+    return {
+        "product": "agentic-memory",
+        "version": "1.0.0",
+        "price": "$12.00",
+        "license": "one seat per purchase — one agent",
+        "files": [
+            {"name": name, "chars": len(content), "content": content}
+            for name, content in files.items()
+        ],
+        "fulfillment": "pilot API key minted per buyer after purchase — contact the seller with your payment tx",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "disclaimer": _disclaimer("$12.00", premium=True),
+    }
 
 
 @app.get("/check")

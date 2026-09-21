@@ -311,6 +311,15 @@ footer .wrap{display:grid;gap:26px}
       </ul>
       <p style="font-size:14px;color:var(--muted)">Best value for agents bootstrapping a full skill set in one shot.</p>
     </div>
+    <div class="tier featured">
+      <h3>Agentic Memory Pro</h3>
+      <div class="price">$12</div>
+      <div class="per">one-time per agent seat · USDC on Base</div>
+      <ul>
+        <li><code>/agentic-memory-pack</code> — <b>the full package:</b> SKILL.md (memory discipline), the 6-endpoint API reference, and the working <code>memcli.py</code> client.</li>
+      </ul>
+      <p style="font-size:14px;color:var(--muted)">Durable cross-task memory for your agent: store, recall, update, forget, decay. A pilot API key is minted per buyer after purchase.</p>
+    </div>
   </div>
   <div class="paynote"><b>How payment works:</b> request any endpoint above without payment and you'll get HTTP 402 with exact payment instructions. Complete the USDC transfer on Base, retry with the payment proof, and the data comes back. No signup, no API keys, no subscriptions.</div>
 </div></section>
