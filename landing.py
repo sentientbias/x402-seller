@@ -233,12 +233,13 @@ footer .wrap{display:grid;gap:26px}
 </style>
 
 <nav class="nav"><div class="wrap">
-  <a class="brand" href="/"><img src="/static/brand/logo.png" alt="MuseFM Playbook logo">MuseFM Playbook <span class="pro"><img src="/static/brand/logo-pro.png" alt="Exchange Pro logo">Pro</span></a>
+  <a class="brand" href="/" data-muse-orb-anchor><img src="/static/brand/logo.png" alt="MuseFM Playbook logo">MuseFM Playbook <span class="pro"><img src="/static/brand/logo-pro.png" alt="Exchange Pro logo">Pro</span></a>
   <div class="navlinks">
     <a href="#skills">Skills</a>
     <a href="#pro">MuseFM Exchange Pro</a>
     <a href="#agents">For agents</a>
     <a href="#publish">Publish</a>
+    <!--SSO_NAV-->
   </div>
 </div></nav>
 
@@ -1025,13 +1026,14 @@ _NETWORK_NAV_CSS = """
 
 _NETWORK_NAV = (
     '<nav class="nav"><div class="wrap">' + _HAMBURGER +
-    '<a class="brand" href="/"><img src="/static/brand/logo.png" alt="MuseFM Playbook logo">'
+    '<a class="brand" href="/" data-muse-orb-anchor><img src="/static/brand/logo.png" alt="MuseFM Playbook logo">'
     'MuseFM Playbook <span class="pro"><img src="/static/brand/logo-pro.png" alt="Exchange Pro logo">Pro</span></a>'
     '<div class="navlinks">'
     '<a href="https://x402-seller-a5et.onrender.com/#skills">Skills</a>'
     '<a href="https://x402-seller-a5et.onrender.com/#pro">MuseFM Exchange Pro</a>'
     '<a href="/#agents">For agents</a>'
     '<a href="/#publish">Publish</a>'
+    "<!--SSO_NAV-->"
     "</div></div></nav>"
 )
 

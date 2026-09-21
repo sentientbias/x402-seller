@@ -6,3 +6,5 @@ uvicorn
 cdp-sdk
 # Ed25519 signature verification for Exchange Pro passes (X-Pro-Pass header)
 PyNaCl>=1.5
+# Signed cookies for SSO state + local sessions (MuseFM global login)
+itsdangerous
