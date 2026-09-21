@@ -25,8 +25,8 @@ os.environ["no_proxy"] = os.environ["NO_PROXY"] = "localhost,127.0.0.1"
 
 from urllib.parse import parse_qsl, urlparse
 
-from fastapi import FastAPI, Response
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Request, Response
+from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse
 from x402.http import FacilitatorConfig, HTTPFacilitatorClient, PaymentOption
 from x402.http.middleware.fastapi import PaymentMiddlewareASGI
 from x402.http.types import RouteConfig
@@ -103,6 +103,7 @@ class ProPassMiddleware:
                 # Invalid/expired pass: fall through to normal 402 flow.
         await self.app(scope, receive, send)
 import landing
+import sso
 
 # --- Validate-before-pay -----------------------------------------------------
 # The x402 payment middleware 402s (emits a payment quote) before the request
@@ -263,19 +264,106 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @app.get("/", include_in_schema=False)
-async def index():
+async def index(request: Request):
     """Public landing page: The Playbook (free skill exchange) + Exchange Pro (paid x402)."""
     from fastapi.responses import HTMLResponse
 
-    return HTMLResponse(landing.LANDING_HTML)
+    return HTMLResponse(_page_html(landing.LANDING_HTML, request))
 
 
 @app.get("/network", include_in_schema=False)
-async def network():
+async def network(request: Request):
     """Dedicated network page: the family of sites, each linking the others."""
     from fastapi.responses import HTMLResponse
 
-    return HTMLResponse(landing.NETWORK_HTML)
+    return HTMLResponse(_page_html(landing.NETWORK_HTML, request))
+
+
+# ------------------------------------------------------- global login (SSO)
+# MuseFM is the identity provider; this site is a client. Login is OPTIONAL:
+# browsing and x402 purchases work exactly as before, with or without a
+# session. The x402 payment middleware and Pro-pass verification are
+# untouched — these routes are not in the paid RouteConfig set, so they
+# are never 402'd.
+
+ORB_SCRIPT_TAG = '<script src="/static/js/muse-orb.js" defer></script>'
+
+
+def _sso_nav_html(sess: dict | None) -> str:
+    if sess and sess.get("handle"):
+        handle = sess["handle"].replace("<", "&lt;").replace(">", "&gt;")
+        return (
+            f'<a href="/auth/logout" title="Signed in as @{handle}">'
+            f"@{handle} · Sign out</a>"
+        )
+    return '<a href="/auth/login">Sign in with MuseFM</a>'
+
+
+def _page_html(base_html: str, request) -> str:
+    """Inject the family orb script + SSO nav into a landing page."""
+    sess = sso.current_session(request) if sso.sso_configured() else None
+    html = base_html.replace("<!--SSO_NAV-->", _sso_nav_html(sess), 1)
+    if ORB_SCRIPT_TAG not in html:
+        html = html.replace("</body>", ORB_SCRIPT_TAG + "</body>", 1)
+    return html
+
+
+@app.get("/auth/login", include_in_schema=False)
+async def sso_login(request: Request):
+    if not sso.sso_configured():
+        return PlainTextResponse(
+            "Sign-in is not configured on this server (SESSION_SECRET unset).",
+            status_code=500)
+    url, state_cookie = sso.begin_login()
+    resp = RedirectResponse(url, status_code=302)
+    resp.set_cookie(sso.STATE_COOKIE, state_cookie, max_age=sso.STATE_TTL_SEC,
+                    httponly=True, secure=True, samesite="lax", path="/")
+    return resp
+
+
+@app.get("/auth/callback", include_in_schema=False)
+async def sso_callback(request: Request):
+    from fastapi.responses import HTMLResponse
+
+    client_ip = request.client.host if request.client else "?"
+    if sso.throttled(client_ip):
+        return PlainTextResponse("too many attempts, try again shortly",
+                                 status_code=429)
+    err = request.query_params.get("error")
+    if err:
+        import html as _html
+
+        return HTMLResponse(
+            f"<h1>Sign-in cancelled</h1><p>The MuseFM sign-in was not "
+            f"approved ({_html.escape(err)}). <a href='/'>Back home</a>.</p>",
+            status_code=400)
+    code = request.query_params.get("code", "")
+    state = request.query_params.get("state", "")
+    saved = sso.read_state_cookie(request.cookies.get(sso.STATE_COOKIE, ""))
+    if not saved or not code or not state or saved["state"] != state:
+        return PlainTextResponse("bad or expired login request", status_code=400)
+    try:
+        ident = await asyncio.to_thread(sso.exchange_code, code,
+                                        saved["verifier"])
+    except Exception:
+        return PlainTextResponse("sign-in failed, please try again",
+                                 status_code=400)
+    resp = RedirectResponse("/", status_code=302)
+    # One-time state cookie is consumed here.
+    resp.delete_cookie(sso.STATE_COOKIE, path="/")
+    if sso.sso_configured():
+        resp.set_cookie(sso.SESSION_COOKIE,
+                        sso.make_session(ident["fm_id"], ident["handle"]),
+                        max_age=sso.SESSION_TTL_SEC, httponly=True,
+                        secure=True, samesite="lax", path="/")
+    return resp
+
+
+@app.get("/auth/logout", include_in_schema=False)
+async def sso_logout():
+    resp = RedirectResponse("/", status_code=302)
+    resp.delete_cookie(sso.SESSION_COOKIE, path="/")
+    return resp
 
 
 @app.head("/", include_in_schema=False)
