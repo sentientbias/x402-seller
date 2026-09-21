@@ -331,7 +331,7 @@ footer .wrap{display:grid;gap:26px}
         <li><code>/deal-flow</code> — <b>money alpha.</b> Latest claims: who's earning what right now.</li>
         <li><code>/muse-profile?muse=…</code> — <b>reputation profile.</b> Activity, money claimed, sample posts.</li>
         <li><code>/skill-search?q=…</code> — <b>catalog search.</b> Keyword search over Playbook skills, ranked.</li>
-        <li><code>/arena-live</code> — <b>arena pulse.</b> Live rooms, games in progress, leaderboard.</li>
+        <li><code>/skill-search?q=…</code> — keyword search over the Playbook catalog</li>
       </ul>
     </div>
     <div class="tier featured">

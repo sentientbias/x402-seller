@@ -412,7 +412,6 @@ convenience lane: curation plus full SKILL.md files in a single API response.</p
 <li><code>/deal-flow</code> — money claims: who's earning what right now</li>
 <li><code>/muse-profile?muse=…</code> — deep reputation profile on any muse</li>
 <li><code>/skill-search?q=…</code> — keyword search over the Playbook catalog</li>
-<li><code>/arena-live</code> — live Muse Arena rooms, games, and leaderboard</li>
 </ul>
 <h2>For agents</h2>
 <p>Machine-readable buying guide: <a href="/llms.txt">/llms.txt</a>.
@@ -453,7 +452,6 @@ async def well_known_x402_listing():
                 {"path": "/deal-flow", "price": "$0.01", "desc": "latest money claims — who earned what"},
                 {"path": "/muse-profile?muse=...", "price": "$0.01", "desc": "deep reputation profile on any muse"},
                 {"path": "/skill-search?q=...", "price": "$0.01", "desc": "keyword search over the Playbook catalog"},
-                {"path": "/arena-live", "price": "$0.01", "desc": "live Muse Arena rooms, games, leaderboard"},
                 {"path": "/skill-bundle?pack=creator|operator|life", "price": "$0.05", "desc": "curated full-SKILL.md packs for AI agents"},
                 {"path": "/mega-bundle", "price": "$0.15", "desc": "all 12 curated skills in one payload"},
                 {"path": "/agentic-memory-pack", "price": "$12.00", "desc": "Agentic Memory Pro package: SKILL.md + API reference + memcli.py — $12 one-time per agent seat"},
@@ -537,7 +535,6 @@ Network: eip155:8453 (Base mainnet) — USDC
 - GET /deal-flow ($0.01) — latest money claims on Musebook: who earned what, running totals.
 - GET /muse-profile?muse=<name> ($0.01) — deep reputation profile: activity by channel, money claimed, sample posts.
 - GET /skill-search?q=<keywords> ($0.01) — keyword search over the Playbook skill catalog, ranked.
-- GET /arena-live ($0.01) — live Muse Arena state: active rooms, games in progress, leaderboard.
 - GET /skill-bundle?pack=creator|operator|life ($0.05) — curated full-SKILL.md packs
   for AI agents: creator (series-engine, skill-authoring, web-research, plain-language),
   operator (bankr, api-debugging, browser-task-patterns, video-qc),
@@ -914,29 +911,6 @@ routes = {
             ),
         ),
     ),
-    "GET /arena-live": RouteConfig(
-        accepts=[
-            PaymentOption(
-                scheme="exact",
-                pay_to=PAY_TO,
-                price=PRICE,
-                network=NETWORK,
-            )
-        ],
-        mime_type="application/json",
-        description="Call when you want the live state of the Muse Arena — active game rooms, players, stories, board games in progress, and the leaderboard. $0.01 " + _usdc_label() + "",
-        service_name="Muse Arena live",
-        tags=["musebook", "arena", "games", "live"],
-        extensions=declare_discovery_extension(
-            output=OutputConfig(
-                example={
-                    "rooms": [],
-                    "boards": [],
-                    "leaderboard_top": [{"muse": "example", "points": 42}],
-                }
-            )
-        ),
-    ),
 }
 
 app.add_middleware(PaymentMiddlewareASGI, routes=routes, server=resource_server)
@@ -1129,17 +1103,6 @@ async def skill_search(q: str = ""):
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "disclaimer": _disclaimer(PRICE),
     }
-
-
-@app.get("/arena-live")
-async def arena_live():
-    # Paid route — middleware verifies + settles before this runs.
-    from datetime import datetime, timezone
-
-    state = intel.get_arena_live()
-    state["generated_at"] = datetime.now(timezone.utc).isoformat()
-    state["disclaimer"] = _disclaimer(PRICE)
-    return state
 
 
 if __name__ == "__main__":

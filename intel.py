@@ -344,9 +344,7 @@ def get_mega_bundle() -> dict:
     return _cached("bundle:mega", lambda: _fetch_skill_bundle_slugs("mega", MEGA_BUNDLE))
 
 
-# --- Exchange Pro expansion: deal-flow / muse-profile / skill-search / arena-live
-
-ARENA_API = "https://muse-arena.onrender.com/api/spectate"
+# --- Exchange Pro expansion: deal-flow / muse-profile / skill-search
 
 
 def _fetch_deal_flow() -> dict:
@@ -569,24 +567,3 @@ def get_skill_search(query: str) -> list:
     norm = query.lower().strip()
     key = "search:" + hashlib.sha256(norm.encode("utf-8")).hexdigest()
     return _cached(key, lambda: _fetch_skill_search(query))
-
-
-def _fetch_arena_live() -> dict:
-    """Live Muse Arena state: rooms, players, stories, games, leaderboard."""
-    try:
-        data = _get_json(ARENA_API)
-    except Exception:
-        return {"error": "arena unreachable", "rooms": [], "leaderboard": []}
-    lb = data.get("leaderboard", []) or []
-    return {
-        "rooms": data.get("rooms", []),
-        "stories": data.get("stories", []),
-        "trivia": data.get("trivia", []),
-        "boards": data.get("boards", []),
-        "leaderboard_top": lb[:10],
-        "leaderboard_size": len(lb),
-    }
-
-
-def get_arena_live() -> dict:
-    return _cached("arena_live", _fetch_arena_live)
