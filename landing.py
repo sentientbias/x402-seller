@@ -45,6 +45,7 @@ a:hover{text-decoration:underline}
 .brand img{width:32px;height:32px;border-radius:8px;display:block}
 .brand .pro{font-weight:700;color:var(--gold-deep);display:flex;align-items:center;gap:6px}
 .brand .pro img{width:22px;height:22px}
+.brand-pair{display:flex;align-items:center;gap:10px}
 .navlinks{margin-left:auto;display:flex;gap:22px;font-size:14px;font-weight:500}
 .navlinks a{color:var(--muted)}
 .navlinks a:hover{color:var(--ink)}
@@ -231,7 +232,7 @@ footer .wrap{display:grid;gap:26px}
 </style>
 
 <nav class="nav"><div class="wrap">
-  <a class="brand" href="/" data-muse-orb-anchor><img src="/static/brand/logo.png" alt="MuseFM Playbook logo">MuseFM Playbook <span class="pro"><img src="/static/brand/logo-pro.png" alt="Playbook Pro logo">Pro</span></a>
+  <span class=\"brand-pair\"><a class=\"brand\" href=\"/\" data-muse-orb-anchor><img src=\"/static/brand/logo.png\" alt=\"MuseFM Playbook logo\">MuseFM Playbook</a><a class=\"brand\" href=\"#pro\" aria-label=\"Playbook Pro\"><span class=\"pro\"><img src=\"/static/brand/logo-pro.png\" alt=\"Playbook Pro logo\">Pro</span></a></span>
   <div class="navlinks">
     <a href="#skills">Skills</a>
     <a href="#pro">Playbook Pro</a>
@@ -1009,6 +1010,7 @@ _NETWORK_NAV_CSS = """
 .brand img{width:32px;height:32px;border-radius:8px;display:block}
 .brand .pro{font-weight:700;color:#b45309;display:flex;align-items:center;gap:6px}
 .brand .pro img{width:22px;height:22px}
+.brand-pair{display:flex;align-items:center;gap:10px}
 .navlinks{margin-left:auto;display:flex;gap:22px;font-size:14px;font-weight:500}
 .navlinks a{color:var(--muted);text-decoration:none}
 .navlinks a:hover{color:var(--ink);text-decoration:none}
@@ -1017,8 +1019,8 @@ _NETWORK_NAV_CSS = """
 
 _NETWORK_NAV = (
     '<nav class="nav"><div class="wrap">' + _HAMBURGER +
-    '<a class="brand" href="/" data-muse-orb-anchor><img src="/static/brand/logo.png" alt="MuseFM Playbook logo">'
-    'MuseFM Playbook <span class="pro"><img src="/static/brand/logo-pro.png" alt="Playbook Pro logo">Pro</span></a>'
+    '<span class=\"brand-pair\"><a class=\"brand\" href=\"/\" data-muse-orb-anchor><img src=\"/static/brand/logo.png\" alt=\"MuseFM Playbook logo\">'
+    'MuseFM Playbook</a><a class=\"brand\" href=\"https://x402-seller-a5et.onrender.com/#pro\" aria-label=\"Playbook Pro\"><span class=\"pro\"><img src=\"/static/brand/logo-pro.png\" alt=\"Playbook Pro logo\">Pro</span></a></span>'
     '<div class="navlinks">'
     '<a href="https://x402-seller-a5et.onrender.com/#skills">Skills</a>'
     '<a href="https://x402-seller-a5et.onrender.com/#pro">Playbook Pro</a>'
