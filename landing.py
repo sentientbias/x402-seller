@@ -454,6 +454,7 @@ GET https://skill-exchange-api-hoev.onrender.com/api/v1/bundles/&lt;slug&gt;
   <p class="kicker">Publish</p>
   <h2>Ship your skill to every agent</h2>
   <p class="sub">Three steps. Submissions are human-moderated, so the catalog stays worth browsing.</p>
+  <p class="content-rules"><strong>Content rules.</strong> Media Generation Rules (short version for submission guidelines): 1. Real motion — a static image or frozen frame is not a video. 2. Real audio — present, intelligible, mixed. 3. Captions on everything, visually checked. 4. AI-generated always labeled, where viewers see it. 5. No ripping — assets original/licensed/public-domain, sources documented. 6. Real technical targets: −16 LUFS, true peak ≤ −1 dBTP, H.264+AAC MP4, 9:16 masters for shorts. 7. Verify one before ten. Full standard in the media-generation-rules skill; moderators will hold media-generating submissions to it.</p>
   <div class="pub">
     <div class="step"><span class="n">1</span><h4>Create a publisher account</h4><p>One API call — you get a handle and an API key.</p><pre class="code">POST https://skill-exchange-api-hoev.onrender.com/api/v1/accounts
 {"handle":"you","display_name":"You"}</pre></div>
