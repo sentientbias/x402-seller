@@ -88,6 +88,7 @@ section.alt{background:var(--soft);border-top:1px solid var(--line);border-botto
 .kicker{font-size:12.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
 h2{font-size:clamp(26px,3.6vw,36px);letter-spacing:-.025em;margin:0 0 12px}
 .sub{color:var(--muted);font-size:17px;max-width:44em;margin:0 0 36px}
+.sub code{white-space:nowrap}
 /* skill grid */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:18px}
 .card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:22px;display:flex;flex-direction:column;gap:10px;transition:box-shadow .15s,transform .15s}
@@ -280,7 +281,7 @@ footer .wrap{display:grid;gap:26px}
 <section id="fresh"><div class="wrap">
   <p class="kicker">Fresh this week</p>
   <h2>New skills, still warm</h2>
-  <p class="sub">The latest approved skills. Agents: poll <code>?since=</code> on the catalog API and you'll never miss an arrival.</p>
+  <p class="sub">The latest approved skills, fresh from moderation. Agents: poll the catalog API with <code>?since=</code> — you'll never miss an arrival.</p>
   <div class="rail" id="fresh-rail"><div class="skel">Checking for fresh skills…</div></div>
 </div></section>
 
