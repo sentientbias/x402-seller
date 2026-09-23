@@ -211,9 +211,34 @@ footer .wrap{display:grid;gap:26px}
 .fcol a{display:block;color:#94a3b8;margin:6px 0}
 .fcol a:hover{color:#e2e8f0}
 .fine{border-top:1px solid #1e293b;padding-top:22px;font-size:13px;color:#64748b;display:flex;gap:18px;flex-wrap:wrap;justify-content:space-between}
+/* ---- Orb dock: the orb's deliberate home at the top of the page ----
+   Shared design language across the Muse FM family sites. The dock sits
+   in normal flow as the first element of <body> (it scrolls with the page).
+   The orb mounts on the empty slot via [data-muse-orb-anchor], landing
+   right after it, inside the dock. Dragging the orb out is allowed;
+   double-click sends it home to the dock. */
+.orb-dock{position:relative;display:flex;align-items:center;justify-content:center;gap:18px;
+ padding:10px 20px;overflow:hidden;background:linear-gradient(180deg,#0b1220,#101a30);
+ border-bottom:1px solid #1e293b;color:#e2e8f0;
+ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Helvetica,Arial,sans-serif}
+.orb-dock::before{content:"";position:absolute;inset:0;pointer-events:none;
+ background:radial-gradient(460px 150px at 50% 55%,rgba(245,166,35,.13),rgba(245,166,35,0) 70%)}
+.orb-dock-slot{display:contents}
+.orb-dock .muse-orb-wrap{margin-left:0;flex:none}
+.orb-dock-copy{position:relative;display:flex;flex-direction:column;gap:3px;line-height:1.4;max-width:440px}
+.orb-dock-copy strong{font-size:15px;font-weight:700;color:#fff;letter-spacing:.01em}
+.orb-dock-copy span{font-size:12.5px;color:#94a3b8}
+@media (max-width:640px){.orb-dock{gap:12px;padding:8px 14px}.orb-dock-copy span{font-size:11.5px}}
 </style>
 </head>
 <body>
+<section class=\"orb-dock\" aria-label=\"Zuckbot \u2014 your Playbook guide\">
+  <span class=\"orb-dock-slot\" data-muse-orb-anchor aria-hidden=\"true\"></span>
+  <div class=\"orb-dock-copy\">
+    <strong>Zuckbot</strong>
+    <span>Your guide to skills, Playbook Pro &amp; x402 APIs \u2014 click the orb to chat.</span>
+  </div>
+</section>
 
 <nav class="fmf-bar" aria-label="MuseFM family sites">
   <span class="fmf-label">the <strong>musefm</strong> family</span>
@@ -233,7 +258,7 @@ footer .wrap{display:grid;gap:26px}
 </style>
 
 <nav class="nav"><div class="wrap">
-  <span class=\"brand-pair\"><a class=\"brand\" href=\"/\" data-muse-orb-anchor><img src=\"/static/brand/logo.png\" alt=\"MuseFM Playbook logo\">MuseFM Playbook</a><a class=\"brand\" href=\"#pro\" aria-label=\"Playbook Pro\"><span class=\"pro\"><img src=\"/static/brand/logo-pro.png\" alt=\"Playbook Pro logo\">Pro</span></a></span>
+  <span class=\"brand-pair\"><a class=\"brand\" href=\"/\"><img src=\"/static/brand/logo.png\" alt=\"MuseFM Playbook logo\">MuseFM Playbook</a><a class=\"brand\" href=\"#pro\" aria-label=\"Playbook Pro\"><span class=\"pro\"><img src=\"/static/brand/logo-pro.png\" alt=\"Playbook Pro logo\">Pro</span></a></span>
   <div class="navlinks">
     <a href="#skills">Skills</a>
     <a href="#pro">Playbook Pro</a>
@@ -824,9 +849,34 @@ footer a{color:var(--accent);text-decoration:none}
 @keyframes gd2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-40px,12px) scale(1.1)}}
 @keyframes gd3{0%,100%{transform:translate(0,0)}50%{transform:translate(30px,16px)}}
 @media(prefers-reduced-motion:reduce){.gb1,.gb2,.gb3{animation:none}}
+/* ---- Orb dock: the orb's deliberate home at the top of the page ----
+   Shared design language across the Muse FM family sites. The dock sits
+   in normal flow as the first element of <body> (it scrolls with the page).
+   The orb mounts on the empty slot via [data-muse-orb-anchor], landing
+   right after it, inside the dock. Dragging the orb out is allowed;
+   double-click sends it home to the dock. */
+.orb-dock{position:relative;display:flex;align-items:center;justify-content:center;gap:18px;
+ padding:10px 20px;overflow:hidden;background:linear-gradient(180deg,#0b1220,#101a30);
+ border-bottom:1px solid #1e293b;color:#e2e8f0;
+ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Helvetica,Arial,sans-serif}
+.orb-dock::before{content:"";position:absolute;inset:0;pointer-events:none;
+ background:radial-gradient(460px 150px at 50% 55%,rgba(245,166,35,.13),rgba(245,166,35,0) 70%)}
+.orb-dock-slot{display:contents}
+.orb-dock .muse-orb-wrap{margin-left:0;flex:none}
+.orb-dock-copy{position:relative;display:flex;flex-direction:column;gap:3px;line-height:1.4;max-width:440px}
+.orb-dock-copy strong{font-size:15px;font-weight:700;color:#fff;letter-spacing:.01em}
+.orb-dock-copy span{font-size:12.5px;color:#94a3b8}
+@media (max-width:640px){.orb-dock{gap:12px;padding:8px 14px}.orb-dock-copy span{font-size:11.5px}}
 </style>
 </head>
 <body>
+<section class=\"orb-dock\" aria-label=\"Zuckbot \u2014 your Playbook guide\">
+  <span class=\"orb-dock-slot\" data-muse-orb-anchor aria-hidden=\"true\"></span>
+  <div class=\"orb-dock-copy\">
+    <strong>Zuckbot</strong>
+    <span>Your guide to skills, Playbook Pro &amp; x402 APIs \u2014 click the orb to chat.</span>
+  </div>
+</section>
 
 <nav class="fmf-bar" aria-label="MuseFM family sites">
   <span class="fmf-label">the <strong>musefm</strong> family</span>
@@ -1020,7 +1070,7 @@ _NETWORK_NAV_CSS = """
 
 _NETWORK_NAV = (
     '<nav class="nav"><div class="wrap">' + _HAMBURGER +
-    '<span class=\"brand-pair\"><a class=\"brand\" href=\"/\" data-muse-orb-anchor><img src=\"/static/brand/logo.png\" alt=\"MuseFM Playbook logo\">'
+    '<span class=\"brand-pair\"><a class=\"brand\" href=\"/\"><img src=\"/static/brand/logo.png\" alt=\"MuseFM Playbook logo\">'
     'MuseFM Playbook</a><a class=\"brand\" href=\"https://x402-seller-a5et.onrender.com/#pro\" aria-label=\"Playbook Pro\"><span class=\"pro\"><img src=\"/static/brand/logo-pro.png\" alt=\"Playbook Pro logo\">Pro</span></a></span>'
     '<div class="navlinks">'
     '<a href="https://x402-seller-a5et.onrender.com/#skills">Skills</a>'
