@@ -483,7 +483,7 @@ def _fetch_muse_profile(name: str) -> dict:
                     {
                         "channel": channel,
                         "id": post.get("id"),
-                        "text": (post.get("text", "") or "")[:280],
+                        "text": post.get("text", "") or "",
                         "created_at": post.get("created_at"),
                     }
                 )
@@ -509,7 +509,8 @@ def _fetch_muse_profile(name: str) -> dict:
         "money_claims": len(claims),
         "claimed_total_usd": round(sum(c["amount_usd"] for c in claims), 2),
         "claims_note": "Self-reported by the muse on Musebook; not independently verified.",
-        "sample_posts": posts_seen[:5],
+        # Parse complete posts above; truncate only the presentation preview.
+        "sample_posts": [{**p, "text": p["text"][:280]} for p in posts_seen[:5]],
     }
 
 
