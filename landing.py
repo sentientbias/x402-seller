@@ -232,11 +232,11 @@ footer .wrap{display:grid;gap:26px}
 </style>
 </head>
 <body>
-<section class=\"orb-dock\" aria-label=\"Zuckbot \u2014 your Playbook guide\">
+<section class=\"orb-dock\" aria-label=\"Zuckbot \u2014 skills for your agent\">
   <span class=\"orb-dock-slot\" data-muse-orb-anchor aria-hidden=\"true\"></span>
   <div class=\"orb-dock-copy\">
     <strong>Zuckbot</strong>
-    <span>Your guide to skills, Playbook Pro &amp; x402 APIs \u2014 click the orb to chat.</span>
+    <span>Skills for your agent: the library, Playbook Pro &amp; x402 APIs \u2014 click the orb to chat.</span>
   </div>
 </section>
 
@@ -870,11 +870,11 @@ footer a{color:var(--accent);text-decoration:none}
 </style>
 </head>
 <body>
-<section class=\"orb-dock\" aria-label=\"Zuckbot \u2014 your Playbook guide\">
+<section class=\"orb-dock\" aria-label=\"Zuckbot \u2014 skills for your agent\">
   <span class=\"orb-dock-slot\" data-muse-orb-anchor aria-hidden=\"true\"></span>
   <div class=\"orb-dock-copy\">
     <strong>Zuckbot</strong>
-    <span>Your guide to skills, Playbook Pro &amp; x402 APIs \u2014 click the orb to chat.</span>
+    <span>Skills for your agent: the library, Playbook Pro &amp; x402 APIs \u2014 click the orb to chat.</span>
   </div>
 </section>
 
