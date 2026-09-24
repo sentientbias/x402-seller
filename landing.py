@@ -212,6 +212,10 @@ h2{font-size:clamp(26px,3.6vw,36px);letter-spacing:-.025em;margin:0 0 12px}
 /* publish steps */
 .pub{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
 .pub .step .n{background:var(--green-soft);color:var(--green)}
+/* how-to-get callout + modal human-get block */
+.ask-agent{margin:18px 0 0;background:var(--accent-soft);border:1px solid var(--line);border-radius:var(--radius);padding:18px 22px;font-size:15px;color:var(--ink)}
+.ask-agent b{color:var(--ink)}
+.human-get{background:var(--accent-soft);border:1px solid var(--line);border-radius:10px;padding:14px 16px;font-size:14px;color:var(--ink);margin:18px 0 4px;line-height:1.6}
 pre.code{background:var(--dark);color:#dbe7ff;border-radius:10px;padding:16px 18px;font-size:13px;overflow-x:auto;line-height:1.55;margin:12px 0 0}
 /* testimonials */
 .quotes{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
@@ -349,6 +353,18 @@ footer .wrap{display:grid;gap:26px}
       </div>
     </aside>
   </div>
+</div></section>
+
+<section id="how-to-get"><div class="wrap">
+  <p class="kicker">For humans</p>
+  <h2>How to get a skill</h2>
+  <p class="sub">Three steps. No tech skills needed — every skill is free to browse, and getting one to your agent takes a minute.</p>
+  <div class="pub">
+    <div class="step"><span class="n">1</span><h4>Pick a skill</h4><p>Browse the skills above and click the one you want. Each skill teaches your agent to do something specific — its description says what.</p></div>
+    <div class="step"><span class="n">2</span><h4>Open it up</h4><p>Clicking a skill shows what it does and how to get it. You'll see a download button and install options.</p></div>
+    <div class="step"><span class="n">3</span><h4>Get it to your agent</h4><p>Follow the steps shown on the skill. Or skip them entirely — just ask your agent to do it for you (see below).</p></div>
+  </div>
+  <p class="ask-agent"><b>Easier still: just ask your agent.</b> Tell your agent — or Muse — <b>&ldquo;Get me the [skill name] skill from the Playbook&rdquo;</b> and it will fetch it and set it up for you. No downloading, no copying commands.</p>
 </div></section>
 
 <section id="loved" hidden><div class="wrap">
@@ -776,6 +792,7 @@ Authorization: Bearer &lt;your-key&gt;</pre></div>
         '<li><code>' + esc(slug) + '/manifest.json</code> \\u2014 name, version, category</li>' +
         '<li><code>' + esc(slug) + '/receipt.json</code> \\u2014 Ed25519 signature, publisher key, verify steps</li>' +
       '</ul>' +
+      '<div class="human-get"><b>Getting this to your agent?</b> Click <b>Download bundle</b> below, or copy the install steps — or skip all of it: just tell your agent (or Muse) <b>\\u201cGet me the ' + name + ' skill from the Playbook\\u201d</b> and it will fetch it and set it up for you.</div>' +
       '<h4>Verified install</h4>' +
       '<div class="cmd"><pre class="code" data-vcmd></pre><button class="copybtn" data-vcopy>Copy</button></div>' +
       '<p style="font-size:13px;color:var(--ink-soft)">Verifies the Ed25519 signature client-side and refuses to install when it\\u2019s missing or bad.</p>' +
