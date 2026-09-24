@@ -212,8 +212,10 @@ footer .wrap{display:grid;gap:26px}
 .fcol a:hover{color:#e2e8f0}
 .fine{border-top:1px solid #1e293b;padding-top:22px;font-size:13px;color:#64748b;display:flex;gap:18px;flex-wrap:wrap;justify-content:space-between}
 /* ---- Hero orb (Muse FM standard, 2026-09-23): the orb's home is the hero.
-   No top banner. The orb sits centered in the hero, floats on scroll,
-   returns on double-click. Restrained, same as musefm.lol. */
+   No top banner. The orb sits centered in the hero (96px); scroll past the
+   hero and it docks at the side (64px); scroll deeper and it follows you as
+   a small floater (48px). Drag anywhere pauses it; double-click returns it
+   home. Restrained, same as musefm.lol. */
 .hero-orb{display:flex;justify-content:center;margin:0 0 26px}
 .hero-orb .muse-orb-wrap{margin:0;flex:none}
 </style>
@@ -831,8 +833,10 @@ footer a{color:var(--accent);text-decoration:none}
 @keyframes gd3{0%,100%{transform:translate(0,0)}50%{transform:translate(30px,16px)}}
 @media(prefers-reduced-motion:reduce){.gb1,.gb2,.gb3{animation:none}}
 /* ---- Hero orb (Muse FM standard, 2026-09-23): the orb's home is the hero.
-   No top banner. The orb sits centered in the hero, floats on scroll,
-   returns on double-click. Restrained, same as musefm.lol. */
+   No top banner. The orb sits centered in the hero (96px); scroll past the
+   hero and it docks at the side (64px); scroll deeper and it follows you as
+   a small floater (48px). Drag anywhere pauses it; double-click returns it
+   home. Restrained, same as musefm.lol. */
 .hero-orb{display:flex;justify-content:center;margin:0 0 26px}
 .hero-orb .muse-orb-wrap{margin:0;flex:none}
 </style>

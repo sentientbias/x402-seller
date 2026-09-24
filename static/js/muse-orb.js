@@ -27,12 +27,15 @@
  *     <script>window.MuseOrbOptions = {proactive:true};</script>
  *
  * The orb anchors to [data-muse-orb-anchor] first, then header heuristics,
- * then fixed top-right. For the family dock design, put the attribute on an
- * empty slot inside the dock (class "orb-dock"): the orb mounts right after
- * the slot, inside the dock. Dragging out is allowed; double-click (or the
- * dock slot) is home.
+ * then fixed top-right.
  *
- * Easter egg: the orb is draggable. Double-click sends it home to the logo.
+ * Scroll lifecycle (2026-09-23, Anthony): the orb's home is the hero (96px).
+ * Scroll past the hero and it glides to a docked side slot (64px); scroll
+ * deeper and it breaks away to follow you as a small floating follower
+ * (48px, gentle bob). Dragging anywhere marks it user-placed and pauses the
+ * lifecycle; double-click sends it home and resumes it.
+ *
+ * Easter egg: the orb is draggable. Double-click sends it home to the hero.
  * Position persists per-site in localStorage.
  *
  * No network calls, no cookies, no tracking. Respects
@@ -55,6 +58,18 @@
     '.muse-orb-wrap canvas{position:absolute;left:0;top:0;display:block;',
     'width:' + ORB_SIZE + 'px;height:' + ORB_SIZE + 'px;cursor:pointer;touch-action:none;}',
     '.muse-orb-wrap.muse-orb-dragging canvas{cursor:grabbing;}',
+    /* --- scroll lifecycle: hero (96) -> dock (64) -> floating follower (48) --- */
+    '.muse-orb-wrap{transition:left .5s cubic-bezier(.3,.7,.3,1),top .5s cubic-bezier(.3,.7,.3,1),',
+    'right .5s cubic-bezier(.3,.7,.3,1),bottom .5s cubic-bezier(.3,.7,.3,1),',
+    'width .35s ease,height .35s ease;}',
+    '.muse-orb-wrap.muse-orb-dragging{transition:none;}',
+    '.muse-orb-wrap.muse-orb-stage-dock canvas{width:64px;height:64px;}',
+    '.muse-orb-wrap.muse-orb-stage-float canvas{width:48px;height:48px;}',
+    '.muse-orb-wrap.muse-orb-stage-float{animation:muse-orb-bob 4.6s ease-in-out infinite;}',
+    '@keyframes muse-orb-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}',
+    '@media (max-width:640px){',
+    '.muse-orb-wrap.muse-orb-stage-dock canvas{width:56px;height:56px;}',
+    '.muse-orb-wrap.muse-orb-stage-float canvas{width:44px;height:44px;}}',
     /* --- proactive nudge bubble --- */
     '.muse-orb-nudge{position:absolute;bottom:calc(100% + 12px);right:-6px;width:238px;',
     'max-width:62vw;background:#0f172a;color:#f1f5f9;border-radius:13px;',
@@ -129,7 +144,8 @@
     '.muse-orb-form button:hover{background:#0f172a;}',
     '.muse-orb-wrap canvas:focus-visible{outline:2px solid #38bdf8;outline-offset:3px;border-radius:50%;}',
     '@media (prefers-reduced-motion:reduce){.muse-orb-typing span{animation:none;opacity:.7;}',
-    '.muse-orb-sat{transition:none;}.muse-orb-nudge{transition:none;}}'
+    '.muse-orb-sat{transition:none;}.muse-orb-nudge{transition:none;}',
+    '.muse-orb-wrap{transition:none;animation:none;}}'
   ].join('');
 
   function injectCSS() {
@@ -1019,6 +1035,11 @@
 
     /* -------------------------------------------------- drag (the easter egg) */
     var drag = null;
+    // current visual size of the orb (hero 96, dock 64, float 48)
+    function orbVisualSize() {
+      var w = parseInt(wrap.style.width, 10);
+      return (w > 0) ? w : ORB_SIZE;
+    }
     fxCanvas.addEventListener('pointerdown', function (e) {
       e.preventDefault();
       poke(-2.5);
@@ -1034,11 +1055,17 @@
       if (!drag.moved && Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) > 7) {
         drag.moved = true;
         wrap.classList.add('muse-orb-fixed', 'muse-orb-dragging');
+        // grabbing the orb claims it: pause the scroll lifecycle at full size
+        userPlaced = true;
+        wrap.classList.remove('muse-orb-stage-dock', 'muse-orb-stage-float');
+        wrap.style.width = ORB_SIZE + 'px';
+        wrap.style.height = ORB_SIZE + 'px';
         setPose('playful');
       }
       if (drag.moved) {
-        wrap.style.left = Math.max(0, Math.min(window.innerWidth - ORB_SIZE, e.clientX - drag.ox)) + 'px';
-        wrap.style.top = Math.max(0, Math.min(window.innerHeight - ORB_SIZE, e.clientY - drag.oy)) + 'px';
+        var cs = orbVisualSize();
+        wrap.style.left = Math.max(0, Math.min(window.innerWidth - cs, e.clientX - drag.ox)) + 'px';
+        wrap.style.top = Math.max(0, Math.min(window.innerHeight - cs, e.clientY - drag.oy)) + 'px';
         wrap.style.right = 'auto';
       }
     });
@@ -1051,6 +1078,10 @@
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify({ x: wrap.style.left, y: wrap.style.top }));
         } catch (err) { /* private mode */ }
+        userPlaced = true; // a real drag pauses the scroll lifecycle
+        wrap.classList.remove('muse-orb-stage-dock', 'muse-orb-stage-float');
+        wrap.style.width = ORB_SIZE + 'px';
+        wrap.style.height = ORB_SIZE + 'px';
         setPose('happy', 1200);
         poke(3.2);
         if (fanOpen) positionSatellites(); // hub moved — re-aim the fan
@@ -1070,11 +1101,14 @@
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); togglePanel(); }
     });
 
+    // scroll-lifecycle state (declared here so drag-restore below can set it)
+    var orbStage = 'home';   // home | dock | float
+    var userPlaced = false;  // true after a real drag (or a restored saved spot)
     function sendHome() {
       try { localStorage.removeItem(STORAGE_KEY); } catch (err) {}
-      wrap.classList.remove('muse-orb-fixed');
-      wrap.style.left = wrap.style.top = wrap.style.right = '';
-      if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(wrap, anchor.nextSibling);
+      userPlaced = false; // double-click home resumes the scroll lifecycle
+      if (heroEl) { orbStage = 'dock'; goStage('home'); } // force the glide even if stage reads 'home'
+      else seatHome();
       setPose('happy', 1200);
       poke(2.5);
       if (panelOpen) positionPanel();
@@ -1087,8 +1121,111 @@
         document.body.appendChild(wrap);
         wrap.style.left = saved.x;
         wrap.style.top = saved.y;
+        userPlaced = true; // restored drag spot: lifecycle stays paused until double-click home
       }
     } catch (err) {}
+
+    /* ---------------- scroll lifecycle: hero -> dock -> floating follower
+     * Home: orb lives in the hero flow (96px). Scroll past the hero and it
+     * glides to a docked side slot (64px desktop / 56px mobile). Scroll deeper
+     * and it breaks away to follow you as a small floating follower (48px /
+     * 44px mobile, gentle bob). Any real drag marks the orb user-placed and
+     * pauses the lifecycle; double-click home resumes it. */
+    var heroEl = (anchor && anchor.closest)
+      ? (anchor.closest('.hero') || anchor.closest('header') || anchor.closest('section'))
+      : null;
+    function orbNarrow() { return window.innerWidth < 640; }
+    function stageSize(s) {
+      if (s === 'dock') return orbNarrow() ? 56 : 64;
+      if (s === 'float') return orbNarrow() ? 44 : 48;
+      return ORB_SIZE;
+    }
+    function seatHome() {
+      // settle back into the hero flow, full size
+      wrap.classList.remove('muse-orb-fixed', 'muse-orb-stage-dock', 'muse-orb-stage-float');
+      wrap.style.left = wrap.style.top = wrap.style.right = wrap.style.bottom = '';
+      wrap.style.width = ORB_SIZE + 'px';
+      wrap.style.height = ORB_SIZE + 'px';
+      if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(wrap, anchor.nextSibling);
+      if (panelOpen) positionPanel();
+    }
+    function glideHome() {
+      // fly to the anchor's current spot, then settle into the hero flow
+      if (!anchor || !wrap.classList.contains('muse-orb-fixed')) { seatHome(); return; }
+      var arc = anchor.getBoundingClientRect();
+      var cx = arc.left + arc.width / 2 - ORB_SIZE / 2;
+      var cy = arc.top + arc.height / 2 - ORB_SIZE / 2;
+      wrap.classList.remove('muse-orb-stage-dock', 'muse-orb-stage-float');
+      wrap.style.width = ORB_SIZE + 'px';
+      wrap.style.height = ORB_SIZE + 'px';
+      wrap.style.left = Math.max(0, cx) + 'px';
+      wrap.style.top = Math.max(0, cy) + 'px';
+      wrap.style.right = 'auto';
+      wrap.style.bottom = 'auto';
+      setTimeout(seatHome, 540);
+    }
+    function renderStage(next) {
+      wrap.classList.remove('muse-orb-stage-dock', 'muse-orb-stage-float');
+      if (next === 'home') { glideHome(); return; }
+      var size = stageSize(next);
+      if (!wrap.classList.contains('muse-orb-fixed')) {
+        // pin the current visual spot so the glide starts from here, not a jump
+        var rc = wrap.getBoundingClientRect();
+        wrap.classList.add('muse-orb-fixed');
+        document.body.appendChild(wrap);
+        wrap.style.left = rc.left + 'px';
+        wrap.style.top = rc.top + 'px';
+        wrap.style.right = 'auto';
+        wrap.style.bottom = 'auto';
+      }
+      wrap.classList.add(next === 'dock' ? 'muse-orb-stage-dock' : 'muse-orb-stage-float');
+      wrap.style.width = size + 'px';
+      wrap.style.height = size + 'px';
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          if (next === 'dock') {
+            wrap.style.left = Math.max(0, window.innerWidth - 18 - size) + 'px';
+            wrap.style.right = 'auto';
+            wrap.style.top = '36%';
+            wrap.style.bottom = 'auto';
+          } else { // float: bottom-right follower, stays with you while scrolling
+            wrap.style.left = Math.max(0, window.innerWidth - 18 - size) + 'px';
+            wrap.style.top = Math.max(0, window.innerHeight - 20 - size) + 'px';
+            wrap.style.right = 'auto';
+            wrap.style.bottom = 'auto';
+          }
+          if (panelOpen) positionPanel();
+        });
+      });
+    }
+    function goStage(next) {
+      if (next === orbStage || userPlaced) return;
+      orbStage = next;
+      renderStage(next);
+    }
+    function computeStage() {
+      if (!heroEl || userPlaced) return;
+      var r = heroEl.getBoundingClientRect();
+      var next;
+      if (r.bottom > 160) next = 'home';
+      else if (r.bottom > -window.innerHeight * 0.9) next = 'dock';
+      else next = 'float';
+      goStage(next);
+    }
+    var scrollTick = false;
+    function onScrollLifecycle() {
+      if (scrollTick) return;
+      scrollTick = true;
+      requestAnimationFrame(function () { scrollTick = false; computeStage(); });
+    }
+    if (heroEl) {
+      window.addEventListener('scroll', onScrollLifecycle, { passive: true });
+      window.addEventListener('resize', function () {
+        if (!userPlaced && (orbStage === 'dock' || orbStage === 'float')) renderStage(orbStage);
+        onScrollLifecycle();
+      });
+      computeStage(); // catch a restored scroll position on load
+    }
 
     /* ------------------------------------------------------------- panel */
     var panelOpen = false;
@@ -1136,7 +1273,7 @@
       var top = rc.bottom + 12;
       var estH = 430;
       if (top + estH > window.innerHeight - 12) top = Math.max(12, rc.top - estH - 12);
-      var left = Math.max(12, Math.min(window.innerWidth - PANEL_W - 12, rc.left + ORB_SIZE / 2 - PANEL_W / 2));
+      var left = Math.max(12, Math.min(window.innerWidth - PANEL_W - 12, rc.left + rc.width / 2 - PANEL_W / 2));
       panel.style.top = top + 'px';
       panel.style.left = left + 'px';
     }
