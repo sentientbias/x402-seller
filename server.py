@@ -377,6 +377,15 @@ async def health():
     return {"ok": True, "network": NETWORK, "facilitator": FACILITATOR_URL}
 
 
+@app.get("/api/zuckbot-says/random", include_in_schema=False)
+async def api_zuckbot_says_random():
+    """A random Zuckbot saying for the orb's tap dialogue."""
+    import random as _random
+    from zuckbot_quotes import QUOTES as _QUOTES
+    q = _random.choice(_QUOTES)
+    return {"ok": True, "text": q["text"], "tag": q.get("tag")}
+
+
 @app.get("/docs", include_in_schema=False)
 async def docs_page():
     """Human-readable product page (also the public product URL)."""
