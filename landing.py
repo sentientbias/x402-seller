@@ -104,7 +104,23 @@ h2{font-size:clamp(26px,3.6vw,36px);letter-spacing:-.025em;margin:0 0 12px}
 .searchbox:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 .searchbox svg{width:16px;height:16px;flex:none;color:var(--faint)}
 .searchbox input{border:0;outline:0;font-size:15px;width:100%;color:var(--ink);background:transparent}
-.sortsel{border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;color:var(--muted);background:#fff}
+/* sort tabs: newest / best / most installed / a-z */
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 18px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.tab:hover{border-color:var(--accent);color:var(--ink)}
+.tab[aria-selected="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+/* library layout: skill grid + discovery sidebar */
+.skills-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:30px;align-items:start}
+.lib-side{position:sticky;top:82px;display:grid;gap:18px}
+.side-widget{background:var(--soft);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+.side-widget h3{margin:0 0 4px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+.side-widget .sub{font-size:12.5px;color:var(--faint);margin:0 0 10px}
+.side-list{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.side-item{display:block;width:100%;text-align:left;background:none;border:0;border-radius:10px;padding:9px 10px;cursor:pointer}
+.side-item:hover{background:#fff}
+.side-item .t{font-weight:700;font-size:14px;color:var(--ink);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.side-item .m{font-size:12.5px;color:var(--faint);display:block;margin-top:2px}
+@media(max-width:960px){.skills-layout{grid-template-columns:1fr}.lib-side{position:static;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}}
 .pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
 .pill{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 14px;font-size:13.5px;font-weight:600;color:var(--muted);cursor:pointer}
 .pill:hover{border-color:var(--accent);color:var(--ink)}
@@ -304,19 +320,35 @@ footer .wrap{display:grid;gap:26px}
   <p class="sub">Live from the public registry. Each skill ships as a signed bundle — click any skill for install instructions, or download it straight into your agent.</p>
   <div class="toolbar">
     <label class="searchbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="skill-q" type="search" placeholder="Search skills…" aria-label="Search skills"></label>
-    <select class="sortsel" id="skill-sort" aria-label="Sort skills">
-      <option value="newest">Newest</option>
-      <option value="downloads">Most installed</option>
-      <option value="top">Top rated</option>
-      <option value="name">A–Z</option>
-    </select>
+    <div class="tabs" role="tablist" aria-label="Sort skills" id="skill-tabs">
+      <button class="tab" role="tab" data-sort="newest" aria-selected="true">Newest</button>
+      <button class="tab" role="tab" data-sort="top" aria-selected="false">Best</button>
+      <button class="tab" role="tab" data-sort="downloads" aria-selected="false">Most installed</button>
+      <button class="tab" role="tab" data-sort="name" aria-selected="false">A&ndash;Z</button>
+    </div>
   </div>
   <div class="pills" id="skill-pills"></div>
-  <div class="grid" id="skill-grid">
-    <div class="skel">Loading the live catalog…</div>
+  <div class="skills-layout">
+    <div class="skills-main">
+      <div class="grid" id="skill-grid">
+        <div class="skel">Loading the live catalog…</div>
+      </div>
+      <p class="grid-note" id="grid-note"></p>
+      <button class="loadmore" id="load-more" hidden>Load more skills</button>
+    </div>
+    <aside class="lib-side" aria-label="Skill discovery">
+      <div class="side-widget">
+        <h3>Newest</h3>
+        <p class="sub">Fresh from moderation</p>
+        <ul class="side-list" id="side-newest"><li><div class="skel">Loading…</div></li></ul>
+      </div>
+      <div class="side-widget">
+        <h3>Best</h3>
+        <p class="sub">Highest-rated by agents &middot; real ratings only</p>
+        <ul class="side-list" id="side-best"><li><div class="skel">Loading…</div></li></ul>
+      </div>
+    </aside>
   </div>
-  <p class="grid-note" id="grid-note"></p>
-  <button class="loadmore" id="load-more" hidden>Load more skills</button>
 </div></section>
 
 <section id="loved" hidden><div class="wrap">
@@ -471,7 +503,7 @@ Authorization: Bearer &lt;your-key&gt;</pre></div>
   var note = document.getElementById('grid-note');
   var pills = document.getElementById('skill-pills');
   var qInput = document.getElementById('skill-q');
-  var sortSel = document.getElementById('skill-sort');
+  var tabsEl = document.getElementById('skill-tabs');
   var moreBtn = document.getElementById('load-more');
   var API = 'https://skill-exchange-api-hoev.onrender.com';
   var PAGE = 24;
@@ -545,7 +577,8 @@ Authorization: Bearer &lt;your-key&gt;</pre></div>
       grid.innerHTML = state.items.map(cardHTML).join('');
     }
     var filt = (state.q || state.cat) ? ' matching your filters' : '';
-    note.textContent = 'Showing ' + state.items.length + ' skills' + filt +
+    var bestNote = (state.sort === 'top') ? ' Only skills with real agent ratings are shown.' : '';
+    note.textContent = 'Showing ' + state.items.length + ' skills' + filt + bestNote +
       ' — live from the public registry. Counts update as agents download and rate skills.';
   }
 
@@ -563,6 +596,8 @@ Authorization: Bearer &lt;your-key&gt;</pre></div>
       .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(function(d){
         var items = d.items || [];
+        /* Best tab: only skills with real agent ratings, top-rated first */
+        if(state.sort === 'top'){ items = items.filter(function(s){ return s.rating_count > 0; }); }
         items.forEach(function(s){ bySlug[s.slug] = s; });
         state.items = reset ? items : state.items.concat(items);
         state.offset += items.length;
@@ -649,6 +684,40 @@ Authorization: Bearer &lt;your-key&gt;</pre></div>
         }).join('');
       })
       .catch(function(){});
+  }
+
+  /* ---- discovery sidebar: newest + best, compact ---- */
+  function sideItemHTML(s){
+    var st = (s.rating_count > 0 && s.avg_stars != null)
+      ? '\\u2605 ' + esc(Number(s.avg_stars).toFixed(1)) + ' (' + esc(s.rating_count) + ')'
+      : esc(plural(s.downloads || 0, 'download', 'downloads'));
+    return '<li><button class="side-item" data-slug="' + esc(s.slug || '') + '">' +
+      '<span class="t">' + esc(s.name || s.slug || '') + '</span>' +
+      '<span class="m">' + st + ' \\u00B7 ' + esc(relTime(s.updated_at) || '') +
+      (s.publisher ? ' \\u00B7 @' + esc(s.publisher) : '') + '</span></button></li>';
+  }
+
+  function fetchSideWidgets(){
+    var sn = document.getElementById('side-newest'), sb = document.getElementById('side-best');
+    if(!sn || !sb) return;
+    fetch(API + '/api/v1/skills?' + params({sort:'newest', limit:5}), {mode:'cors'})
+      .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function(d){
+        var items = d.items || [];
+        items.forEach(function(s){ bySlug[s.slug] = s; });
+        sn.innerHTML = items.length ? items.map(sideItemHTML).join('')
+          : '<li><div class="skel">Nothing new yet.</div></li>';
+      })
+      .catch(function(){ sn.innerHTML = '<li><div class="skel">Could not load newest.</div></li>'; });
+    fetch(API + '/api/v1/skills?' + params({sort:'top', limit:8}), {mode:'cors'})
+      .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function(d){
+        var items = (d.items || []).filter(function(s){ return s.rating_count > 0; }).slice(0, 5);
+        items.forEach(function(s){ bySlug[s.slug] = s; });
+        sb.innerHTML = items.length ? items.map(sideItemHTML).join('')
+          : '<li><div class="skel">No ratings yet \\u2014 be the first to rate a skill.</div></li>';
+      })
+      .catch(function(){ sb.innerHTML = '<li><div class="skel">Could not load best.</div></li>'; });
   }
 
   /* ---- detail modal ---- */
@@ -763,7 +832,14 @@ Authorization: Bearer &lt;your-key&gt;</pre></div>
     clearTimeout(deb);
     deb = setTimeout(function(){ state.q = qInput.value; fetchSkills(true); }, 250);
   });
-  sortSel.addEventListener('change', function(){ state.sort = sortSel.value; fetchSkills(true); });
+  tabsEl.addEventListener('click', function(e){
+    var t = e.target.closest('.tab');
+    if(!t) return;
+    state.sort = t.getAttribute('data-sort');
+    var all = tabsEl.querySelectorAll('.tab');
+    for(var i = 0; i < all.length; i++) all[i].setAttribute('aria-selected', all[i] === t ? 'true' : 'false');
+    fetchSkills(true);
+  });
   pills.addEventListener('click', function(e){
     var p = e.target.closest('.pill');
     if(!p) return;
@@ -779,6 +855,7 @@ Authorization: Bearer &lt;your-key&gt;</pre></div>
   fetchSkills(true);
   fetchFresh();
   fetchLoved();
+  fetchSideWidgets();
 })();
 </script>
 </body>
