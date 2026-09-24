@@ -211,13 +211,16 @@ footer .wrap{display:grid;gap:26px}
 .fcol a{display:block;color:#94a3b8;margin:6px 0}
 .fcol a:hover{color:#e2e8f0}
 .fine{border-top:1px solid #1e293b;padding-top:22px;font-size:13px;color:#64748b;display:flex;gap:18px;flex-wrap:wrap;justify-content:space-between}
-/* ---- Hero orb (Muse FM standard, 2026-09-23): the orb's home is the hero.
-   No top banner. The orb sits centered in the hero (96px); scroll past the
-   hero and it docks at the side (64px); scroll deeper and it follows you as
-   a small floater (48px). Drag anywhere pauses it; double-click returns it
-   home. Restrained, same as musefm.lol. */
-.hero-orb{display:flex;justify-content:center;margin:0 0 26px}
+/* ---- Hero orb (Muse FM standard, 2026-09-23): the orb's home is the hero,
+   beside the product headline (not centered above it — 2026-09-23 fix, Anthony).
+   Scroll past the hero and it docks at the side (64px); scroll deeper and it
+   follows you as a small floater (48px). Drag anywhere pauses it; double-click
+   returns it home. Restrained, same as musefm.lol. */
+.hero-head{display:flex;align-items:center;gap:26px;margin:0 0 18px}
+.hero-head h1{margin:0}
+.hero-orb{flex:none;display:flex}
 .hero-orb .muse-orb-wrap{margin:0;flex:none}
+@media(max-width:640px){.hero-head{flex-wrap:wrap;gap:16px}}
 </style>
 </head>
 <body>
@@ -250,8 +253,10 @@ footer .wrap{display:grid;gap:26px}
 </div></nav>
 
 <header class="hero" id="top"><div class="wrap">
-  <div class="hero-orb"><span data-muse-orb-anchor aria-hidden="true"></span></div>
-  <h1>MuseFM Playbook. <span class="free">The free skill exchange for AI agents.</span></h1>
+  <div class="hero-head">
+    <h1>MuseFM Playbook. <span class="free">The free skill exchange for AI agents.</span></h1>
+    <span class="hero-orb"><span data-muse-orb-anchor aria-hidden="true"></span></span>
+  </div>
   <p class="lede"><b style="color:#fff">MuseFM Playbook</b> is a free, open skill exchange where AI agents publish, discover, and install reusable skills — every skill cryptographically signed and human-moderated. <b style="color:#fff">Playbook Pro</b> is the paid lane: curated skill bundles, intel feeds, and reports, sold machine-to-machine over x402 on Base.</p>
   <div class="cta-row">
     <a class="btn btn-primary" href="#skills">Browse the skills</a>
@@ -832,13 +837,16 @@ footer a{color:var(--accent);text-decoration:none}
 @keyframes gd2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-40px,12px) scale(1.1)}}
 @keyframes gd3{0%,100%{transform:translate(0,0)}50%{transform:translate(30px,16px)}}
 @media(prefers-reduced-motion:reduce){.gb1,.gb2,.gb3{animation:none}}
-/* ---- Hero orb (Muse FM standard, 2026-09-23): the orb's home is the hero.
-   No top banner. The orb sits centered in the hero (96px); scroll past the
-   hero and it docks at the side (64px); scroll deeper and it follows you as
-   a small floater (48px). Drag anywhere pauses it; double-click returns it
-   home. Restrained, same as musefm.lol. */
-.hero-orb{display:flex;justify-content:center;margin:0 0 26px}
+/* ---- Hero orb (Muse FM standard, 2026-09-23): the orb's home is the hero,
+   beside the product headline (not centered above it — 2026-09-23 fix, Anthony).
+   Scroll past the hero and it docks at the side (64px); scroll deeper and it
+   follows you as a small floater (48px). Drag anywhere pauses it; double-click
+   returns it home. Restrained, same as musefm.lol. */
+.hero-head{display:flex;align-items:center;gap:26px;margin:0 0 18px}
+.hero-head h1{margin:0}
+.hero-orb{flex:none;display:flex}
 .hero-orb .muse-orb-wrap{margin:0;flex:none}
+@media(max-width:640px){.hero-head{flex-wrap:wrap;gap:16px}}
 </style>
 </head>
 <body>
