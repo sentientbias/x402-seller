@@ -152,7 +152,8 @@ h2{font-size:clamp(26px,3.6vw,36px);letter-spacing:-.025em;margin:0 0 12px}
 .bundlelist code{background:var(--soft);border:1px solid var(--line);padding:1px 7px;border-radius:6px;font-size:12.5px}
 .cmd{position:relative;margin:10px 0}
 .cmd pre{margin:0}
-.copybtn{position:absolute;top:10px;right:10px;border:1px solid #334155;background:rgba(255,255,255,.08);color:#dbe7ff;font-size:12px;font-weight:700;border-radius:7px;padding:5px 11px;cursor:pointer}
+.cmd .copybtn{position:absolute;top:10px;right:10px;border:1px solid #334155;background:rgba(255,255,255,.08);color:#dbe7ff;font-size:12px;font-weight:700;border-radius:7px;padding:5px 11px;cursor:pointer}
+.rssrow .copybtn{position:static;flex:none;margin-left:auto}
 .copybtn:hover{background:rgba(255,255,255,.18)}
 .copybtn.ok{background:var(--green);border-color:var(--green);color:#fff}
 .modal .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
